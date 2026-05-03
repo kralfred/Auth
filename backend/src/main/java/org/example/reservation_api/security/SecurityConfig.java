@@ -59,7 +59,9 @@ public class SecurityConfig implements WebMvcConfigurer {
                                 "/swagger-ui/**",
                                 "/swagger-ui.html", // Added this
                                 "/swagger-resources/**",
-                                "/swagger"
+                                "/swagger",
+                                "/favicon.ico", // This fixes the 403 on your favicon
+                                "/error"
                         ).permitAll()
 
                         .requestMatchers(HttpMethod.GET, "/api/users").hasAnyAuthority("view_users", "ROLE_ADMIN", "ADMIN")
