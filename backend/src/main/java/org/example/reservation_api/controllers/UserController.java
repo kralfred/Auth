@@ -36,7 +36,10 @@ public class UserController extends BaseController<User, UserService> {
         List<UserListResponse> users = service.getAccessibleUsersSummary(actor);
         return ResponseEntity.ok(users);
     }
-
+    @GetMapping("/swagger")
+    public String redirectToSwagger() {
+        return "redirect:/swagger-ui/index.html";
+    }
 
     @GetMapping
     public ResponseEntity<List<User>> getAll() {

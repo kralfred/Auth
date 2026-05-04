@@ -35,7 +35,7 @@ if (!backendUrl) {
 /**
  * 3. Final Default: If both fail, use localhost
  */
-const finalUrl = backendUrl || 'http://localhost:8080';
+const finalUrl = backendUrl || 'https://amazing-api-460348586740.europe-central2.run.app';
 
 try {
     const fileContent = `export const CONFIG = {

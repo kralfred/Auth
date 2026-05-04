@@ -19,6 +19,7 @@ public abstract class BaseController<T extends BaseEntity, S extends BaseService
         this.service = service;
     }
 
+
     @GetMapping
     public ResponseEntity<List<T>> getAll() {
         return ResponseEntity.ok(service.findAll());
