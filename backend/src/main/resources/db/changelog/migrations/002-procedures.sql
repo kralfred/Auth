@@ -9,7 +9,7 @@ DECLARE
     v_user_id UUID;
 BEGIN
     -- 1. Insert the new user and capture the generated ID
-    INSERT INTO app_user (id, username, email, password, role)
+    INSERT INTO app_user (id, username, email, password)
     VALUES (gen_random_uuid(), p_username, p_email, p_password, 'GUEST')
     RETURNING id INTO v_user_id;
 
@@ -19,8 +19,6 @@ BEGIN
         (gen_random_uuid(), v_user_id, 'DEFAULT', v_user_id);
 END;
 $$;
-
-INSERT INTO app_user
 
 -- PROCEDURE: Adds a user to a group with a specific role and logs it
 CREATE OR REPLACE PROCEDURE p_add_group_member(

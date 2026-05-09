@@ -3,9 +3,7 @@ package org.example.reservation_api.services;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.reservation_api.DTO.UserListResponse;
-import org.example.reservation_api.entities.User;
-import org.example.reservation_api.entities.UserPermission;
-import org.example.reservation_api.entities.UserRole;
+import org.example.reservation_api.entities.*;
 import org.example.reservation_api.projections.GlobalCapabilityProjection;
 import org.example.reservation_api.repositories.BaseRepository;
 import org.example.reservation_api.repositories.PermissionRepository;
@@ -76,14 +74,20 @@ public class UserService extends BaseService<User, UserRepository> {
                 .collect(Collectors.toSet());
     }
 
-    /**
-     * Dynamic permission check that considers global vs targeted scope
-     */
     public boolean hasPermission(User user, String action, UUID targetId) {
         return user.getPermissions().stream()
                 .anyMatch(p -> p.getPermissionName().equals(action) &&
                         (p.getTargetId() == null || p.getTargetId().equals(targetId)));
     }
+
+    public boolean canUserSeeLogs(UUID userId, UUID currentNestedGroupId) {
+        // 1. Always let Global Admins see logs
+        if (userService.isAdmin(userId)) return true;
+
+        // 2. Check for the specific permission in the specific group
+        return permissionRepository.hasLogViewCapability(userId, currentNestedGroupId);
+    }
+
 
     @Transactional
     public void updateUserTargetRelationships(UUID userId, List<UUID> targetIds) {
@@ -104,20 +108,12 @@ public class UserService extends BaseService<User, UserRepository> {
         }
     }
     public User selfUpdateUser(String currentUsername, User updatedData) {
-        // 1. Fetch user by username (Ensure UserRepository.findByUsername returns Optional<User>)
         return repository.findByUsername(currentUsername).map(existingUser -> {
 
             // 2. Update allowed fields only (Safety check)
             if (updatedData.getEmail() != null) {
                 existingUser.setEmail(updatedData.getEmail());
             }
-
-            // Note: Password updates usually require a PasswordEncoder bean
-            // if (updatedData.getPassword() != null) {
-            //    existingUser.setPassword(passwordEncoder.encode(updatedData.getPassword()));
-            // }
-
-            // 3. Persist changes using the base repository update
             return repository.dbUpdate(existingUser);
         }).orElseThrow(() -> new RuntimeException("User not found: " + currentUsername));
     }
