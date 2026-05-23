@@ -2,21 +2,12 @@ CREATE OR REPLACE PROCEDURE sp_register_user(
     p_username VARCHAR,
     p_email VARCHAR,
     p_password VARCHAR
-)
-    LANGUAGE plpgsql
-AS $$
+) LANGUAGE plpgsql AS $$
 DECLARE
-    v_user_id UUID;
+    v_user_id UUID := gen_random_uuid();
 BEGIN
-    -- 1. Insert the new user and capture the generated ID
     INSERT INTO app_user (id, username, email, password)
-    VALUES (gen_random_uuid(), p_username, p_email, p_password, 'GUEST')
-    RETURNING id INTO v_user_id;
-
-    -- 2. Insert default permissions for the new user
-    INSERT INTO user_permissions (id, user_id, permission_name, access_level ,target_id)
-    VALUES
-        (gen_random_uuid(), v_user_id, 'DEFAULT', v_user_id);
+    VALUES (v_user_id, p_username, p_email, p_password);
 END;
 $$;
 

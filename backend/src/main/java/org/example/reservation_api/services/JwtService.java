@@ -5,8 +5,10 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
+import org.example.reservation_api.DTO.PermissionInfo;
 import org.example.reservation_api.entities.Token;
 import org.example.reservation_api.entities.User;
+import org.example.reservation_api.repositories.PermissionRepository;
 import org.example.reservation_api.repositories.TokenRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -15,10 +17,7 @@ import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -28,12 +27,20 @@ import static javax.crypto.Cipher.SECRET_KEY;
 @RequiredArgsConstructor
 public class JwtService {
     private final TokenRepository tokenRepository;
-
+    private final PermissionRepository permissionRepository;
 
     @Value("${JWT_SECRET}")
     private String secretKey;
 
     public String generateTimedToken(User user, long timeInMin) {
+
+        List<PermissionInfo> perms = permissionRepository.findAllCategorizedPermissions(user.getId());
+        Map<String, List<String>> categorizedClaims = perms.stream()
+                .collect(Collectors.groupingBy(
+                        PermissionInfo::category,
+                        Collectors.mapping(PermissionInfo::action, Collectors.toList())
+                ));
+
         Date now = new Date();
         Date expiry = new Date(now.getTime() + 1000L * 60 * timeInMin);
         Token tokenEntity = new Token(user.getId(), expiry, "ACTIVE");
@@ -42,8 +49,8 @@ public class JwtService {
                 .header().add("typ", "JWT").and()
                 .id(tokenEntity.getId().toString())
                 .subject(user.getUsername())
+                .claim("perms", categorizedClaims)
                 .claim("userId", user.getId().toString())
-                .claim("authorities", user.getPermissions())
                 .issuedAt(now)
                 .expiration(expiry)
                 .signWith(getSignInKey())
@@ -111,7 +118,7 @@ public class JwtService {
     }
 
     private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        byte[] keyBytes = Decoders.BASE64URL.decode(secretKey);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 }

@@ -29,11 +29,8 @@ public class GroupController {
             Authentication authentication) {
 
         User actor = (User) authentication.getPrincipal();
-
-        // Ensure the groupId in the URL matches the one in the request body
-        assert actor != null;
+        // The controller just passes the 'context' to the service
         groupService.updateUserRoles(actor.getId(), groupId, request);
-
         return ResponseEntity.noContent().build();
     }
 }

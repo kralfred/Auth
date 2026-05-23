@@ -22,26 +22,19 @@ public class GroupService {
     private final GroupRepository groupRepository;
     private final PermissionRepository permissionRepository;
     private final UserRepository userRepository;
+    private final AccessControlService accessControlService;
 
     public void updateUserRoles(UUID actorId, UUID groupId, RoleAssignmentRequest request) {
-        User actor = userRepository.dbFindById(actorId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
-
-        // 2. Now you can use the object directly
-        if (actor.isAdmin()) {
-            groupRepository.batchUpdateGroupRoles(groupId, request.userIds(), request.roleId());
-            return;
+        // Check specific action: "CAN_MANAGE_ROLES" within "groupId"
+        if (!accessControlService.hasPermission(actorId, groupId, "CAN_MANAGE_ROLES")) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Insufficient permissions in this group");
         }
 
-        // Otherwise, continue with dynamic permission check
-        NestedUserGroup context = groupRepository.findNestedGroupById(groupId, actorId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-        // ... rest of your validation logic
+        // Proceed with logic...
     }
     public void performGroupAdminAction(UUID actorId, UUID groupId) {
         // Check if the user is a 'Group Admin' for this specific nested group
-        boolean isGroupAdmin = permissionRepository.hasRoleInGroup(actorId, groupId, "Group Admin");
+        boolean isGroupAdmin = accessControlService.hasPermission(actorId, groupId, "Group Admin");
 
         if (!isGroupAdmin) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You are not an admin of this group");

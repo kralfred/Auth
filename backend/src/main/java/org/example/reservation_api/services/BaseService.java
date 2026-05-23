@@ -1,5 +1,6 @@
 package org.example.reservation_api.services;
 
+import lombok.RequiredArgsConstructor;
 import org.example.reservation_api.entities.BaseEntity;
 import org.example.reservation_api.repositories.BaseRepository;
 import org.springframework.beans.BeanUtils;
@@ -11,13 +12,11 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+@RequiredArgsConstructor
 public abstract class BaseService<T extends BaseEntity, R extends BaseRepository<T>> {
 
     protected final R repository;
 
-    protected BaseService(R repository) {
-        this.repository = repository;
-    }
 
     public List<T> findAll() {
         return repository.dbFindAll();

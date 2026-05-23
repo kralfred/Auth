@@ -1,5 +1,7 @@
 package org.example.reservation_api.entities;
 
+import jakarta.persistence.*;
+import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Set;
@@ -7,12 +9,21 @@ import java.util.UUID;
 
 
 @RequiredArgsConstructor
+@Data
+@Entity
+@Table(name = "entity_group")
 public class EntityGroup extends BaseEntity {
-    private final Set<String> permissions;
-    private final Set<UUID> manageableUserIds;
+    private String name;
 
-    public boolean canPerform(String requiredPermission, Set<UUID> targetUsers) {
-        return permissions.contains(requiredPermission) &&
-                manageableUserIds.containsAll(targetUsers);
-    }
+    @ManyToOne
+    @JoinColumn(name = "nested_group_id")
+    private NestedUserGroup nestedGroup;
+
+    @ManyToMany
+    @JoinTable(
+            name = "entity_group_members",
+            joinColumns = @JoinColumn(name = "entity_group_id"),
+            inverseJoinColumns = @JoinColumn(name = "entity_id") // Targeted users
+    )
+    private Set<User> targetedUsers;
 }

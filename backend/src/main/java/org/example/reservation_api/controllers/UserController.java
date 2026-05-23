@@ -29,15 +29,7 @@ public class UserController extends BaseController<User, UserService> {
         super(service);
     }
 
-    @GetMapping("/accessible")
-    public ResponseEntity<Set<UserListResponse>> getAccessibleUsers(Authentication authentication) {
-        // Get the logged-in user (Actor)
-        User actor = (User) authentication.getPrincipal();
 
-        assert actor != null;
-        Set<UserListResponse> users = service.getAccessibleUsersSummary(actor);
-        return ResponseEntity.ok(users);
-    }
     @GetMapping("/swagger")
     public String redirectToSwagger() {
         return "redirect:/swagger-ui/index.html";
@@ -57,21 +49,8 @@ public class UserController extends BaseController<User, UserService> {
         return ResponseEntity.ok(service.update(id, user));
     }
 
-    @PutMapping("/{id}/admin")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<User> adminUpdate(@PathVariable UUID id, @RequestBody User entity) {
-        return ResponseEntity.ok(service.adminUpdateUser(id, entity));
-    }
-    // UserController.java
-    @PutMapping("/{id}/target-permissions")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Void> updateTargetPermissions(
-            @PathVariable UUID id,
-            @RequestBody List<UUID> targetIds) {
 
-        service.updateUserTargetRelationships(id, targetIds);
-        return ResponseEntity.ok().build();
-    }
+
 
     @PutMapping("/me")
     @PreAuthorize("isAuthenticated()")

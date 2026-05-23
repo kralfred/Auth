@@ -3,7 +3,6 @@ package org.example.reservation_api.repositories;
 import jakarta.transaction.Transactional;
 import org.example.reservation_api.entities.User;
 import org.example.reservation_api.projections.GlobalCapabilityProjection;
-import org.springframework.context.support.BeanDefinitionDsl;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.jpa.repository.query.Procedure;
