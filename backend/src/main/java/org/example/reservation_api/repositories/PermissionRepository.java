@@ -44,7 +44,7 @@ public interface PermissionRepository extends JpaRepository<PermissionRule, UUID
         return hasPermissionInGroup(userId, groupId, roleName);
     }
     @Query("""
-        SELECT new org.example.reservation_api.dtos.PermissionInfo(
+        SELECT new org.example.reservation_api.DTO.PermissionInfo(
             teg.name, 
             r.permissionName
         )
