@@ -5,7 +5,7 @@ GRANT ALL ON SCHEMA public TO public;
 SET search_path TO public;
 
 CREATE TABLE IF NOT EXISTS app_user (
-                                        id UUID PRIMARY KEY,
+                                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                         username VARCHAR(50) NOT NULL UNIQUE,
                                         email VARCHAR(100) NOT NULL UNIQUE,
                                         password VARCHAR(255) NOT NULL
@@ -79,21 +79,20 @@ CREATE TABLE IF NOT EXISTS group_role_permission_groups (
 
 
 CREATE TABLE IF NOT EXISTS user_token (
-                                         id         uuid         not null
-                                             primary key,
-                                         expiration timestamp(6) not null,
-                                         message    text,
-                                         owner_id   uuid         not null
+                                          id         uuid         not null default gen_random_uuid() primary key,
+                                          expiration timestamp(6) not null,
+                                          message    text,
+                                          owner_id   uuid         not null
 );
 
 
 CREATE TABLE IF NOT EXISTS api_log (
-                                       id UUID PRIMARY KEY, -- From BaseEntity
+                                       id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                        created_at TIMESTAMP NOT NULL,
                                        name TEXT,
                                        user_id TEXT, -- Kept as TEXT to match your Java class @Column definition
                                        action TEXT,
                                        status TEXT,
                                        duration_ms BIGINT,
-                                       nested_group_id UUID REFERENCES nested_group(id) -- Added to support group-filtered logs
+                                       nested_group_id UUID REFERENCES nested_group(id) ON DELETE SET NULL
 );

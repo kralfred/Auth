@@ -29,6 +29,7 @@ dependencies {
 
     compileOnly 'org.projectlombok:lombok:1.18.30'
     annotationProcessor 'org.projectlombok:lombok:1.18.30'
+    runtimeOnly 'org.postgresql:postgresql'
 
     // 2. Do the same for tests if you use them
     testCompileOnly 'org.projectlombok:lombok:1.18.30'
