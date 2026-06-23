@@ -13,7 +13,7 @@ steps:
       - '--url=jdbc:postgresql://${_DB_URL}:${_DB_PORT}/${_DB_NAME}?currentSchema=${_DB_SCHEMA}'
       - '--username=${_DB_USER}'
       - '--password=${_DB_PASSWORD}'
-      - '--default-schema-name=alfabase_schema'
+      - '--default-schema-name=${_DB_SCHEMA}'
       - '--search-path=backend/src/main/resources/'
       - 'update'
 
@@ -54,7 +54,7 @@ steps:
       - '--memory=1Gi'
       # The ^#^ tells gcloud to use # as the separator for this dict
       - '--set-env-vars'
-      - '^#^DB_HOST=${_DB_URL}#DB_PORT=${_DB_PORT}#DB_NAME=${_DB_NAME}#DB_USERNAME=${_DB_USER}#DB_PASSWORD=${_DB_PASSWORD}#JWT_SECRET=${_JWT_SECRET}#FRONTEND_URL=${_FRONTEND_URL}#SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2#SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA=alfabase_schema'
+      - '^#^DB_HOST=${_DB_URL}#DB_PORT=${_DB_PORT}#DB_NAME=${_DB_NAME}#DB_USERNAME=${_DB_USER}#DB_PASSWORD=${_DB_PASSWORD}#JWT_SECRET=${_JWT_SECRET}#FRONTEND_URL=${_FRONTEND_URL}#SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2#SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA=${_DB_SCHEMA}'
 
 images:
   - 'europe-central2-docker.pkg.dev/$PROJECT_ID/amazing-repo/amazing-api:$SHORT_SHA'
