@@ -14,6 +14,7 @@ steps:
       - '--username=${_DB_USER}'
       - '--password=${_DB_PASSWORD}'
       - '--default-schema-name=${_DB_SCHEMA}'
+      - '--liquibase-schema-name=${_DB_SCHEMA}'
       - '--search-path=backend/src/main/resources/'
       - 'update'
 
