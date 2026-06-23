@@ -10,7 +10,7 @@ steps:
   - name: 'liquibase/liquibase:4.25.1'
     args:
       - '--changelog-file=db/changelog/db.changelog-master.xml'
-      - '--url=jdbc:postgresql://${_DB_URL}:${_DB_PORT}/${_DB_NAME}?currentSchema=alfabase_schema'
+      - '--url=jdbc:postgresql://${_DB_URL}:${_DB_PORT}/${_DB_NAME}?currentSchema=${_DB_SCHEMA}'
       - '--username=${_DB_USER}'
       - '--password=${_DB_PASSWORD}'
       - '--default-schema-name=alfabase_schema'
