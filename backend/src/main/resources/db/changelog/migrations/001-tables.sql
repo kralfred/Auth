@@ -1,8 +1,4 @@
 
-CREATE SCHEMA IF NOT EXISTS public;
-GRANT ALL ON SCHEMA public TO public;
-
-SET search_path TO public;
 
 CREATE TABLE IF NOT EXISTS app_user (
                                         id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
