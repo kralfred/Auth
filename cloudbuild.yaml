@@ -53,10 +53,8 @@ steps:
       - '--timeout=300'
       - '--cpu=2'
       - '--memory=1Gi'
-      # The ^#^ tells gcloud to use # as the separator for this dict
       - '--set-env-vars'
-      - '^#^DB_HOST=${_DB_URL}#DB_PORT=${_DB_PORT}#DB_NAME=${_DB_NAME}#DB_USERNAME=${_DB_USER}#DB_PASSWORD=${_DB_PASSWORD}#JWT_SECRET=${_JWT_SECRET}#FRONTEND_URL=${_FRONTEND_URL}#SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2#SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA=${_DB_SCHEMA}'
-
+      - '^#^DB_HOST=${_DB_URL}#DB_PORT=${_DB_PORT}#DB_NAME=${_DB_NAME}#DB_USERNAME=${_DB_USER}#DB_PASSWORD=${_DB_PASSWORD}#DB_SCHEMA=${_DB_SCHEMA}#JWT_SECRET=${_JWT_SECRET}#FRONTEND_URL=${_FRONTEND_URL}#SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2#SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA=${_DB_SCHEMA}'
 images:
   - 'europe-central2-docker.pkg.dev/$PROJECT_ID/amazing-repo/amazing-api:$SHORT_SHA'
   - 'europe-central2-docker.pkg.dev/$PROJECT_ID/amazing-repo/amazing-api:latest'
