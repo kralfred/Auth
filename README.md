@@ -17,9 +17,6 @@ The docker compose file will not register the file, unless it's in the same fold
 
 docker compose --env-file ../secret.env up -d
 
-This gets run from the destination of the docker compose file, which is in the back-end (Java) app folder. If you run the app before the setup, the compose file will build
-it with the wrong path and there won't be any warning, except that the variables don't exist :( it's annoying, but I havn't found a way to set it up, and I'm getting frustrated. 
-
 
 Backend: 
 
