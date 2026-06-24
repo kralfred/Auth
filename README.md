@@ -26,25 +26,17 @@ Backend:
 You can check the APIs with swagger
 
 ```mermaid
-graph LR
-    A[Vercel Frontend] -->|HTTPS Fetch| B[Cloud Run Spring Boot API]
-    B -->|JDBC Connection| C[(Filess.io PostgreSQL)]
-```mermaid
----
-config:
-  layout: fixed
----
 flowchart TB
- subgraph group2["Group 1"]
+    subgraph group2["Group 1"]
         user4["User 4"]
         user5["User 5"]
         user6["User 6"]
         user7["User 7"]
-  end
+    end
 
-     user4:::group2Style
-     user5:::group2Style
-     user6:::group2Style
-     user7:::group2Style
+    user4:::group2Style
+    user5:::group2Style
+    user6:::group2Style
+    user7:::group2Style
     classDef group1Style stroke:#818cf8,fill:#eef2ff
     classDef group2Style stroke:#2dd4bf,fill:#f0fdfa
