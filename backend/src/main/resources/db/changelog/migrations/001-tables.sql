@@ -86,9 +86,9 @@ CREATE TABLE IF NOT EXISTS api_log (
                                        id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                        created_at TIMESTAMP NOT NULL,
                                        name TEXT,
-                                       user_id TEXT, -- Kept as TEXT to match your Java class @Column definition
+                                       user_id TEXT,
                                        action TEXT,
                                        status TEXT,
                                        duration_ms BIGINT,
-                                       nested_group_id UUID REFERENCES nested_group(id) ON DELETE SET NULL
+                                       nested_group_id UUID REFERENCES users(id) ON DELETE SET NULL
 );

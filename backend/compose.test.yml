@@ -1,0 +1,18 @@
+# compose.test.yml
+services:
+  test-db:
+    image: postgres:16-alpine
+    container_name: reservation_test_db
+    environment:
+      POSTGRES_DB: reservation_test_db
+      POSTGRES_USER: test_user
+      POSTGRES_PASSWORD: test_password
+    ports:
+      - "5433:5432" # Map to port 5433 so it doesn't conflict with your dev database on 5432!
+    # These command flags tell Postgres to keep writes in RAM and protect your SSD:
+    command: >
+      postgres 
+      -c fsync=off 
+      -c synchronous_commit=off 
+      -c full_page_writes=off 
+      -c max_wal_size=2GB
