@@ -8,11 +8,8 @@ import org.example.reservation_api.DTO.RegistrationRequest;
 import org.example.reservation_api.security.AppSecurityProperties;
 import org.example.reservation_api.security.MyCustomBouncer;
 import org.example.reservation_api.services.JwtService;
-import org.example.reservation_api.services.RegistrationService;
+import org.example.reservation_api.services.UserService;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.annotation.*;
 
 
@@ -24,13 +21,13 @@ import java.util.UUID;
 public class AuthController {
 
     private final MyCustomBouncer bouncer;
-    private final RegistrationService registrationService;
     private final AppSecurityProperties props;
+    private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
+    public ResponseEntity<String> login(@RequestBody LoginRequest request) {
 
-            return ResponseEntity.ok(bouncer.tryLogin(request));
+            return ResponseEntity.ok("Generated token without header: ");
 
         }
 
@@ -38,12 +35,12 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<String> register(@Valid @RequestBody RegistrationRequest request) {
 
-        String result = registrationService.tryRegister(request);
+        String result = userService.tryRegister(request);
         return ResponseEntity.ok(result);
     }
 
     @PostMapping("/validate")
-    public ResponseEntity<LoginResponse> validateToken(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<String> validateToken(@RequestHeader("Authorization") String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.badRequest().build();
         }
@@ -51,6 +48,6 @@ public class AuthController {
         System.out.println("Generated header: " + authHeader);
         String token = authHeader.substring(7);
         System.out.println("Generated token without header: " + token);
-        return ResponseEntity.ok(bouncer.checkToken(token));
+        return ResponseEntity.ok("Generated token without header: ");
     }
 }

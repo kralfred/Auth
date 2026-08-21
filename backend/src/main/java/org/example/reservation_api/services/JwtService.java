@@ -4,19 +4,28 @@ import io.jsonwebtoken.*;
 
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.example.reservation_api.DTO.PermissionInfo;
-import org.example.reservation_api.entities.Token;
+import org.example.reservation_api.DTO.TokenValidationResult;
+import org.example.reservation_api.entities.RefreshToken;
+import org.example.reservation_api.entities.Session;
 import org.example.reservation_api.entities.User;
 import org.example.reservation_api.repositories.PermissionRepository;
 import org.example.reservation_api.repositories.TokenRepository;
+import org.example.reservation_api.security.SecurityUtils;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
 
 import javax.crypto.SecretKey;
 import java.security.Key;
+import java.security.SecureRandom;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,35 +38,53 @@ public class JwtService {
     private final TokenRepository tokenRepository;
     private final PermissionRepository permissionRepository;
 
+    private final SecureRandom secureRandom = new SecureRandom();
+
     @Value("${JWT_SECRET}")
     private String secretKey;
+    @Value("${application.security.jwt.expiration}")
+    private long jwtExpiration;
 
-    public String generateTimedToken(User user, long timeInMin) {
 
-        List<PermissionInfo> perms = permissionRepository.findAllCategorizedPermissions(user.getId());
-        Map<String, List<String>> categorizedClaims = perms.stream()
-                .collect(Collectors.groupingBy(
-                        PermissionInfo::category,
-                        Collectors.mapping(PermissionInfo::action, Collectors.toList())
-                ));
-
-        Date now = new Date();
-        Date expiry = new Date(now.getTime() + 1000L * 60 * timeInMin);
-        Token tokenEntity = new Token(user.getId(), expiry, "ACTIVE");
-        tokenEntity = tokenRepository.save(tokenEntity);
+    public String generateAccessToken(String username, UUID nestedGroupId, List<String> permissions) {
         return Jwts.builder()
-                .header().add("typ", "JWT").and()
-                .id(tokenEntity.getId().toString())
-                .subject(user.getUsername())
-                .claim("perms", categorizedClaims)
-                .claim("userId", user.getId().toString())
-                .issuedAt(now)
-                .expiration(expiry)
+                .subject(username)
+                .claim("env_id", nestedGroupId.toString())  // Read by JwtAuthenticationFilter
+                .claim("permissions", permissions)          // Used for authority mapping
+                .issuedAt(new Date(System.currentTimeMillis()))
+                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
                 .signWith(getSignInKey())
                 .compact();
     }
 
-    public Token isTokenValid(String token) {
+    private SecretKey getSignInKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        return Keys.hmacShaKeyFor(keyBytes);
+    }
+
+
+    public RefreshToken generateRefreshToken(Session session, long expirationInMinutes){
+        String rawRefreshToken = generateOpaqueRefreshToken();
+
+
+        String hashedToken = SecurityUtils.hashToken(rawRefreshToken);
+
+        RefreshToken refreshTokenEntity = new RefreshToken();
+        refreshTokenEntity.setTokenHash(hashedToken);
+        refreshTokenEntity.setSession(session);
+        refreshTokenEntity.setExpiresAt(OffsetDateTime.from(Instant.now().plus(expirationInMinutes, ChronoUnit.MINUTES)));
+        tokenRepository.save(refreshTokenEntity);
+        return refreshTokenEntity;
+    }
+
+    public String generateOpaqueRefreshToken() {
+        byte[] randomBytes = new byte[48];
+        secureRandom.nextBytes(randomBytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(randomBytes);
+    }
+
+
+    public TokenValidationResult validateToken(String token) {
         try {
             Claims claims = Jwts.parser()
                     .verifyWith(getSignInKey())
@@ -65,30 +92,18 @@ public class JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
 
-            UUID databaseTokenId = UUID.fromString(claims.getId());
-            UUID ownerId = UUID.fromString(claims.get("userId", String.class));
+            UUID tokenId = UUID.fromString(claims.getId());
+            UUID userId = UUID.fromString(claims.get("userId", String.class));
 
-            Token returnVal = new Token(ownerId, claims.getExpiration(), "CORRECT");
-            returnVal.setId(databaseTokenId);
-
-            return returnVal;
+            return new TokenValidationResult(tokenId, userId, claims, TokenValidationResult.ValidationStatus.VALID);
 
         } catch (ExpiredJwtException e) {
-            return new Token(null, null, "Expired");
+            return new TokenValidationResult(null, null, null, TokenValidationResult.ValidationStatus.EXPIRED);
         } catch (Exception e) {
-            return new Token(null, null, "Invalid");
+            return new TokenValidationResult(null, null, null, TokenValidationResult.ValidationStatus.INVALID);
         }
     }
 
-    public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
-    }
-
-    // Generic helper to extract a single claim
-    public <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
 
     public Claims extractAllClaims(String token) {
         return Jwts.parser()
@@ -117,8 +132,4 @@ public class JwtService {
         return authList;
     }
 
-    private SecretKey getSignInKey() {
-        byte[] keyBytes = Decoders.BASE64URL.decode(secretKey);
-        return Keys.hmacShaKeyFor(keyBytes);
-    }
 }

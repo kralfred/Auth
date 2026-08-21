@@ -1,6 +1,5 @@
 package org.example.reservation_api.repositories;
 
-import org.example.reservation_api.entities.NestedUserGroup;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 

@@ -3,8 +3,8 @@ package org.example.reservation_api.config;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.example.reservation_api.entities.APILog;
-import org.example.reservation_api.repositories.AuditLogRepository;
+import org.example.reservation_api.entities.ApiLog;
+import org.example.reservation_api.repositories.APILogRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,7 +17,7 @@ import java.util.Map;
 public class APILogger {
 
     @Autowired
-    private AuditLogRepository auditLogRepository;
+    private APILogRepository auditLogRepository;
 
     @Around("execution(* org.example.reservation_api.controllers.*.*(..))")
     public Object logStep(ProceedingJoinPoint joinPoint) throws Throwable {
@@ -36,7 +36,7 @@ public class APILogger {
         try {
             Object result = joinPoint.proceed();
             long duration = System.currentTimeMillis() - start;
-            APILog log = new APILog(username, fullAction, "SUCCESS", duration);
+            ApiLog log = new ApiLog();
             auditLogRepository.save(log);
 
             return result;
@@ -45,7 +45,7 @@ public class APILogger {
 
             e.printStackTrace();
 
-            APILog log = new APILog(username, fullAction, "ERROR: " + e.getMessage(), duration);
+            ApiLog log = new ApiLog();
             auditLogRepository.save(log);
             throw e;
         }

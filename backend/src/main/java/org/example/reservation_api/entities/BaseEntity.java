@@ -1,11 +1,8 @@
 package org.example.reservation_api.entities;
 
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
+import jakarta.persistence.*;
 import org.hibernate.annotations.Generated;
 import org.hibernate.generator.EventType;
-import jakarta.persistence.Id;
-import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -17,7 +14,7 @@ import java.util.UUID;
 @NoArgsConstructor
 public abstract class BaseEntity {
     @Id
-    @GeneratedValue(generator = "trigger") // Tells Hibernate to let the DB generate it
-    @Generated(event = EventType.INSERT)
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "id", updatable = false, nullable = false)
     private UUID id;
 }

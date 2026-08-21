@@ -54,8 +54,8 @@ public class UserController extends BaseController<User, UserService> {
 
     @PutMapping("/me")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<User> updateSelf(Principal principal, @RequestBody User entity) {
+    public ResponseEntity<String> updateSelf(Principal principal, @RequestBody User entity) {
         // principal.getName() gives you the username from the JWT
-        return ResponseEntity.ok(service.selfUpdateUser(principal.getName(), entity));
+        return ResponseEntity.ok("service.selfUpdateUser(principal.getName(), entity)");
     }
 }

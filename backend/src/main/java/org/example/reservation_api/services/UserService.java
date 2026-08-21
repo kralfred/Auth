@@ -2,6 +2,8 @@ package org.example.reservation_api.services;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.misc.LogManager;
+import org.example.reservation_api.DTO.RegistrationRequest;
 import org.example.reservation_api.DTO.UserListResponse;
 import org.example.reservation_api.entities.*;
 import org.example.reservation_api.projections.GlobalCapabilityProjection;
@@ -9,6 +11,7 @@ import org.example.reservation_api.repositories.BaseRepository;
 import org.example.reservation_api.repositories.PermissionRepository;
 import org.example.reservation_api.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
@@ -17,26 +20,30 @@ import java.util.stream.Collectors;
 @Service
 public class UserService extends BaseService<User, UserRepository> {
 
-    private final AccessControlService accessControlService;
+    private final PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
 
-    public UserService(UserRepository userRepository, AccessControlService accessControlService) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
         super(userRepository);
-        this.accessControlService = accessControlService;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
-    // Clean CRUD: Just handle the user entity
-    public User selfUpdateUser(String currentUsername, User updatedData) {
-        return repository.findByUsername(currentUsername).map(existingUser -> {
-            if (updatedData.getEmail() != null) {
-                existingUser.setEmail(updatedData.getEmail());
-            }
-            return repository.dbUpdate(existingUser);
-        }).orElseThrow(() -> new RuntimeException("User not found"));
+    public String tryRegister(RegistrationRequest request) {
+        User newUser = new User();
+        UserInfo cred = new UserInfo();
+        newUser.setUsername(request.getUsername());
+        cred.setPassword(passwordEncoder.encode(request.getPassword()));
+
+        Set<String> perms = new HashSet<>();
+        perms.add("read_own_profile");
+
+        userRepository.registerUser(request.getUsername(), request.getEmail(),request.getName(), request.getPassword());
+        return "User registered successfully";
     }
 
-    // Delegate authorization checks
-    public boolean canUserSeeLogs(UUID userId, UUID nestedGroupId) {
-        return accessControlService.hasPermission(userId, nestedGroupId, "can_view_logs");
+    @Transactional
+    public void switchEnvironment(UUID userId, UUID newNestedGroupId) {
+        userRepository.updateCurrentEnvironment(userId, newNestedGroupId);
     }
-
 }

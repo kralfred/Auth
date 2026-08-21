@@ -1,35 +1,53 @@
 package org.example.reservation_api.entities;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.UUID;
 
-
-@Data
+@Getter
+@Setter
 @Entity
-@Table(name = "app_user")
-@NoArgsConstructor // Required for JPA reflection
-@EqualsAndHashCode(callSuper = true)
+@Table(name = "\"user\"")
 public class User extends BaseEntity {
 
-    @Column(nullable = false, unique = true)
+
+    @Size(max = 100)
+    @NotNull
+    @Column(name = "username", nullable = false, length = 100)
     private String username;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    @NotNull
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "current_environment", nullable = false)
+    private NestedGroup currentEnvironment;
 
-    @Column(nullable = false)
-    private String password;
-
-    // Optional: Bi-directional link to see what groups this user belongs to
     @OneToMany(mappedBy = "user")
-    private Set<NestedGroupMember> groupMemberships;
+    private Set<ApiLog> apiLogs = new LinkedHashSet<>();
 
-    // Optional: Bi-directional link to functional permission groups
     @OneToMany(mappedBy = "user")
-    private Set<NestedGroupMember>nestedGroupMemberships;
+    private Set<CustomInfo> customInfos = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<Device> devices = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<GroupMember> groupMembers = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "owner")
+    private Set<NestedGroup> nestedGroups = new LinkedHashSet<>();
+
+    @OneToMany(mappedBy = "user")
+    private Set<Session> sessions = new LinkedHashSet<>();
+
+    @OneToOne(mappedBy = "user")
+    private UserInfo userInfo;
+
+
 }

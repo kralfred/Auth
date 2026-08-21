@@ -9,5 +9,6 @@ import lombok.Getter;
 public class RegistrationRequest {
         private String username;
         private String email;
+        private String name;
         private String password;
 }

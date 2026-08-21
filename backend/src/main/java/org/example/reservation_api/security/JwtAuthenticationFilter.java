@@ -6,7 +6,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.example.reservation_api.entities.Token;
+import org.example.reservation_api.entities.RefreshToken;
 import org.example.reservation_api.repositories.TokenRepository;
 import org.example.reservation_api.services.JwtService;
 import org.jspecify.annotations.NonNull;
@@ -29,6 +29,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final TokenRepository tokenRepository;
 
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     @NonNull HttpServletResponse response,
@@ -36,6 +37,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
+        // 1. Pass-through if no Bearer token is provided
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -44,16 +46,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt = authHeader.substring(7);
 
         try {
+            // 2. Extract JWT claims
             Claims claims = jwtService.extractAllClaims(jwt);
             String username = claims.getSubject();
-            String tokenIdString = claims.getId();
 
+            // Extract custom nested group ID claim from JWT
+            String nestedGroupIdStr = claims.get("env_id", String.class);
+
+            // 3. Set ThreadLocal context for the active request thread
+            if (nestedGroupIdStr != null) {
+                CurrentEnvironmentContext.set(UUID.fromString(nestedGroupIdStr));
+            }
+
+            // 4. Authenticate in Spring Security Context
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                var tokenData = tokenRepository.findById(UUID.fromString(tokenIdString)).orElse(null);
-
-                if (tokenData != null) {
-
+                if (jwtService.validateToken(jwt).isValid()) { // Validate signature & expiration
                     List<SimpleGrantedAuthority> authorities = jwtService.getAuthorities(jwt);
 
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
@@ -61,17 +69,22 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                             null,
                             authorities
                     );
-
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
+
+            // 5. Pass down the filter chain
+            filterChain.doFilter(request, response);
+
         } catch (Exception e) {
             logger.error("Could not set user authentication", e);
+            filterChain.doFilter(request, response);
+        } finally {
+            // 6. CRUCIAL: Always clear ThreadLocal when request finishes
+            CurrentEnvironmentContext.clear();
         }
-
-        filterChain.doFilter(request, response);
     }
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {

@@ -1,70 +1,84 @@
-CREATE OR REPLACE PROCEDURE sp_register_user(
-    p_username VARCHAR,
-    p_email VARCHAR,
-    p_password VARCHAR
-) LANGUAGE plpgsql AS $$
-DECLARE
-    v_user_id UUID := gen_random_uuid();
-BEGIN
-    INSERT INTO app_user (id, username, email, password)
-    VALUES (v_user_id, p_username, p_email, p_password);
-END;
-$$;
-
--- PROCEDURE: Adds a user to a group with a specific role and logs it
-CREATE OR REPLACE PROCEDURE p_add_group_member(
-    p_user_id UUID,
-    p_group_id UUID,
-    p_role_name VARCHAR
+CREATE OR REPLACE FUNCTION fn_verify_user_credentials(
+    p_username VARCHAR
 )
-    LANGUAGE plpgsql AS $$
-DECLARE
-    v_role_id UUID;
+RETURNS TABLE (
+    user_id UUID,
+    password_hash VARCHAR
+) AS $$
 BEGIN
-    -- 1. Find the role ID based on the name
-    SELECT id INTO v_role_id FROM group_roles WHERE name = p_role_name;
-
-    -- 2. Insert or Update the membership
-    INSERT INTO group_members (group_id, user_id, group_role_id)
-    VALUES (p_group_id, p_user_id, v_role_id)
-    ON CONFLICT (group_id, user_id) DO UPDATE SET group_role_id = v_role_id;
-
-    -- 3. Automatically log the action
-    INSERT INTO group_logs (group_id, message, severity)
-    VALUES (p_group_id, 'User ' || p_user_id || ' assigned role ' || p_role_name, 'INFO');
-END;
-$$;
-
-
-CREATE OR REPLACE FUNCTION fn_get_user_by_email(p_email TEXT)
-    RETURNS SETOF app_user AS $$ -- This tells Postgres to return the table's structure
-BEGIN
-    RETURN QUERY
-        SELECT * FROM app_user
-        WHERE email = p_email
-        LIMIT 1;
+RETURN QUERY
+SELECT
+    u.id,
+    ui.password
+FROM "user" u
+         JOIN "user_info" ui ON u.id = ui.user_id
+WHERE u.username = p_username;
 END;
 $$ LANGUAGE plpgsql;
 
-
-CREATE OR REPLACE PROCEDURE sp_global_logout(
-    p_user_id UUID,
-    OUT p_count_revoked INTEGER
+CREATE OR REPLACE FUNCTION fn_register_user(
+    p_username VARCHAR,
+    p_email VARCHAR,
+    p_name VARCHAR,
+    p_password_hash VARCHAR
 )
-    LANGUAGE plpgsql
-AS $$
+    RETURNS UUID AS $$
+DECLARE
+    v_user_id UUID;
 BEGIN
-    -- Count how many tokens exist for this owner
-    SELECT COUNT(*) INTO p_count_revoked
-    FROM user_token
-    WHERE owner_id = p_user_id;
+    -- 1. Insert into "user" table (id auto-generates via gen_random_uuid())
+    INSERT INTO "user" ("username")
+    VALUES (p_username)
+    RETURNING "id" INTO v_user_id;
 
-    -- Delete the tokens
-    DELETE FROM user_token WHERE owner_id = p_user_id;
+    -- 2. Insert corresponding profile and hashed password into "user_info"
+    INSERT INTO "user_info" ("user_id", "email", "name", "password")
+    VALUES (v_user_id, p_email, p_name, p_password_hash);
 
-EXCEPTION WHEN OTHERS THEN
-    p_count_revoked := 0;
-    RAISE NOTICE 'Failed to log out all devices for user %', p_user_id;
--- In procedures, the transaction will automatically abort on unhandled exceptions.
+    -- 3. Return the newly created user ID
+    RETURN v_user_id;
 END;
-$$;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_get_entity_access(
+    p_user_id UUID,
+    p_group_id UUID
+)
+    RETURNS TABLE (entity_type VARCHAR) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT DISTINCT e.name
+        FROM "group_member" gm
+                 JOIN "group_permission" gp ON gm.group_id = gp.owner_users_group
+                 JOIN "permission" p ON gp.permission_id = p.id
+                 JOIN "targetable_attribute" ta ON p.id = ta.id
+                 JOIN "entity_type" e ON ta.entity_type_id = e.id
+        WHERE gm.user_id = p_user_id
+          AND gm.group_id = p_group_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_validate_and_get_session(
+    p_token_hash VARCHAR
+)
+    RETURNS TABLE (
+                      session_id UUID,
+                      user_id UUID,
+                      username VARCHAR,
+                      dpop_jkt VARCHAR,
+                      is_valid BOOLEAN
+                  ) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT
+            s.id AS session_id,
+            s.user_id,
+            u.username,
+            s.dpop_jkt,
+            (s.is_active AND NOT rt.is_revoked AND rt.expires_at > CURRENT_TIMESTAMP) AS is_valid
+        FROM refresh_token rt
+                 JOIN session s ON rt.session_id = s.id
+                 JOIN "user" u ON s.user_id = u.id
+        WHERE rt.token_hash = p_token_hash;
+END;
+$$ LANGUAGE plpgsql;
