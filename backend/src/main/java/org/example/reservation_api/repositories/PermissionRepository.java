@@ -8,18 +8,25 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.UUID;
 
 @Repository
-public interface PermissionRepository extends BaseRepository<Permission> {
+@RequiredArgsConstructor
+public class PermissionRepository {
 
-    @Query(value = "SELECT * FROM fn_get_entity_access(:userId, :groupId)", nativeQuery = true)
-    List<String> findUserEntityAccess(
-            @Param("userId") UUID userId,
-            @Param("groupId") UUID groupId
-    );
+    private final JdbcClient jdbcClient;
 
+    public List<String> findUserEntityAccess(UUID userId, UUID groupId) {
+        String sql = "SELECT * FROM fn_get_entity_access(?, ?)";
+
+        return jdbcClient.sql(sql)
+                .param(userId)
+                .param(groupId)
+                .query(String.class)
+                .list();
+    }
 }

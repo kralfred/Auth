@@ -1,47 +1,19 @@
 package org.example.reservation_api.entities;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
-import lombok.Getter;
-import lombok.Setter;
-import org.hibernate.annotations.ColumnDefault;
-import org.hibernate.annotations.OnDelete;
-import org.hibernate.annotations.OnDeleteAction;
-
-import java.time.OffsetDateTime;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
-@Getter
-@Setter
-@Entity
-@Table(name = "refresh_token")
-public class RefreshToken extends BaseEntity{
-
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "session_id", nullable = false)
-    private Session session;
-
-    @Size(max = 64)
-    @NotNull
-    @Column(name = "token_hash", nullable = false, length = 64)
-    private String tokenHash;
-
-    @NotNull
-    @Column(name = "expires_at", nullable = false)
-    private OffsetDateTime expiresAt;
-
-    @NotNull
-    @ColumnDefault("false")
-    @Column(name = "is_revoked", nullable = false)
-    private Boolean isRevoked;
-
-    @NotNull
-    @ColumnDefault("now()")
-    @Column(name = "created_at", nullable = false)
-    private OffsetDateTime createdAt;
-
-
+public record RefreshToken(
+        UUID id,
+        UUID sessionId,
+        String tokenHash,
+        Instant expiresAt,
+        boolean isRevoked,
+        Instant createdAt
+) implements Identifiable {
+    // Constructor for creating a default 7-day token
+    public RefreshToken(UUID sessionId, String tokenHash) {
+        this(UUID.randomUUID(), sessionId, tokenHash, Instant.now().plus(7, ChronoUnit.DAYS), false, Instant.now());
+    }
 }

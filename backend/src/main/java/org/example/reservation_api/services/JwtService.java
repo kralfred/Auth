@@ -69,12 +69,14 @@ public class JwtService {
 
         String hashedToken = SecurityUtils.hashToken(rawRefreshToken);
 
-        RefreshToken refreshTokenEntity = new RefreshToken();
-        refreshTokenEntity.setTokenHash(hashedToken);
-        refreshTokenEntity.setSession(session);
-        refreshTokenEntity.setExpiresAt(OffsetDateTime.from(Instant.now().plus(expirationInMinutes, ChronoUnit.MINUTES)));
-        tokenRepository.save(refreshTokenEntity);
-        return refreshTokenEntity;
+        return new RefreshToken(
+                UUID.randomUUID(),
+                session.id(),
+                hashedToken,
+                Instant.now().plus(7, ChronoUnit.DAYS),
+                false,
+                Instant.now()
+        );
     }
 
     public String generateOpaqueRefreshToken() {

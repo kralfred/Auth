@@ -1,18 +1,19 @@
 CREATE OR REPLACE FUNCTION fn_verify_user_credentials(
     p_username VARCHAR
 )
-RETURNS TABLE (
-    user_id UUID,
-    password_hash VARCHAR
-) AS $$
+    RETURNS TABLE (
+                      user_id UUID,
+                      password_hash VARCHAR
+                  ) AS $$
 BEGIN
-RETURN QUERY
-SELECT
-    u.id,
-    ui.password
-FROM "user" u
-         JOIN "user_info" ui ON u.id = ui.user_id
-WHERE u.username = p_username;
+    RETURN QUERY
+        SELECT
+            u.id AS user_id,
+            ui.password,
+            u.current_environment
+        FROM "user" u
+                 JOIN "user_info" ui ON u.id = ui.user_id
+        WHERE u.username = p_username;
 END;
 $$ LANGUAGE plpgsql;
 
@@ -43,6 +44,24 @@ $$ LANGUAGE plpgsql;
 CREATE OR REPLACE FUNCTION fn_get_entity_access(
     p_user_id UUID,
     p_group_id UUID
+)
+    RETURNS TABLE (entity_type VARCHAR) AS $$
+BEGIN
+    RETURN QUERY
+        SELECT DISTINCT e.name
+        FROM "group_member" gm
+                 JOIN "group_permission" gp ON gm.group_id = gp.owner_users_group
+                 JOIN "permission" p ON gp.permission_id = p.id
+                 JOIN "targetable_attribute" ta ON p.id = ta.id
+                 JOIN "entity_type" e ON ta.entity_type_id = e.id
+        WHERE gm.user_id = p_user_id
+          AND gm.group_id = p_group_id;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION fn_check_username_email(
+    p_username UUID,
+    p_email UUID
 )
     RETURNS TABLE (entity_type VARCHAR) AS $$
 BEGIN

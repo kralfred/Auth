@@ -7,12 +7,9 @@ import org.springframework.stereotype.Service;
 
 
 @Service
-public class LogService extends BaseService<ApiLog, APILogRepository> {
+public class LogService  {
 
-    public LogService(APILogRepository logRepository) {
-        super(logRepository);
 
-    }
 
 
 }

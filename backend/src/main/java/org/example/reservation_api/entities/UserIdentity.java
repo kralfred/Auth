@@ -3,11 +3,10 @@ package org.example.reservation_api.entities;
 
 import java.util.UUID;
 
-public record UserInfo(
+public record UserIdentity(
         UUID userId,
-        String email,
-        String name,      // Nullable
-        String password  // Nullable (OAuth users)
+        String provider,
+        String providerId // Nullable depending on strategy
 ) implements Identifiable {
     @Override
     public UUID id() {

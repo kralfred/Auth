@@ -33,10 +33,5 @@ public abstract class BaseController<T extends BaseEntity, S extends BaseService
     }
 
 
-    @GetMapping("/ids")
-    public List<UUID> getAllIds() {
-        return service.findAll().stream()
-                .map(BaseEntity::getId)
-                .toList();
-    }
+
 }

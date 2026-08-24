@@ -22,18 +22,24 @@ import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.util.Arrays;
+import java.util.Collections;
 
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
-public class SecurityConfig implements WebMvcConfigurer {
+public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserRepository userRepository;
 
     @Bean
     public UserDetailsService userDetailsService() {
-        return username -> (org.springframework.security.core.userdetails.UserDetails) userRepository.findByUsername(username)
+        return username -> userRepository.findCredentialsByUsername(username)
+                .map(user -> org.springframework.security.core.userdetails.User.builder()
+                        .username(user.username())
+                        .password(user.passwordHash())
+                        .authorities(Collections.emptyList()) // Add roles/granted authorities if applicable
+                        .build())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
     }
 
@@ -79,19 +85,5 @@ public class SecurityConfig implements WebMvcConfigurer {
         return http.build();
     }
 
-    @Value("${FRONTEND_URL}")
-    private String allowedOrigins;
 
-    @Override
-    public void addCorsMappings(CorsRegistry registry) {
-        String[] origins = Arrays.stream(allowedOrigins.split(","))
-                .map(String::trim)
-                .toArray(String[]::new);
-
-        registry.addMapping("/**")
-                .allowedOrigins(origins)
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-                .allowedHeaders("*")
-                .allowCredentials(true);
-    }
 }

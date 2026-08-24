@@ -45,23 +45,23 @@ public class MyCustomBouncer {
         UserCredentialsProjection credentials = userRepository.findCredentialsByUsername(request.username())
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
-        if (!passwordEncoder.matches(request.password(), credentials.getPasswordHash())) {
+        if (!passwordEncoder.matches(request.password(), credentials.passwordHash())) {
             throw new BadCredentialsException("Invalid credentials");
         }
 
         // 2. Delegate Session & Metadata creation to SessionService
         SessionService.SessionResult sessionResult = sessionService.createSessionForDevice(
-                credentials.getUserId(),
+                credentials.userId(),
                 request.deviceId()
         );
 
         // 3. Resolve permissions for active environment
         List<String> views = permissionRepository.findUserEntityAccess(
-                credentials.getUserId(),
-                credentials.getCurrentEnvironment()
+                credentials.userId(),
+                credentials.currentEnvironment()
         );
         UUID currentGroupId = CurrentEnvironmentContext.get();
-        List<String> pageAccess = permissionRepository.findUserEntityAccess(credentials.getUserId(),currentGroupId);
+        List<String> pageAccess = permissionRepository.findUserEntityAccess(credentials.userId(),currentGroupId);
         long expiration = 1200;
 
 
@@ -72,7 +72,7 @@ public class MyCustomBouncer {
         );
 
         return new LoginResponse(accessToken, expiration,sessionResult.rawRefreshToken(),
-                credentials.getUserId(), credentials.getUsername(),pageAccess);
+                credentials.userId(), credentials.username(),pageAccess);
     }
 
 
