@@ -13,6 +13,13 @@ CREATE TABLE IF NOT EXISTS "custom_info" (
                                              "value" VARCHAR(100)
 );
 
+CREATE TABLE IF NOT EXISTS "system_setting" (
+                                                     key VARCHAR(100) PRIMARY KEY,
+                                                     value VARCHAR(255) NOT NULL,
+                                                     description TEXT,
+                                                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS "user_info" (
                                            "user_id" UUID PRIMARY KEY,
                                            "email" VARCHAR(255) UNIQUE NOT NULL,
@@ -135,7 +142,6 @@ CREATE TABLE IF NOT EXISTS "api_log" (
 
 -- Foreign Key Constraints
 ALTER TABLE "user_info" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE;
-ALTER TABLE "user_info" ADD FOREIGN KEY ("custom_info_id") REFERENCES "custom_info" ("id");
 ALTER TABLE "group_invite_target" ADD FOREIGN KEY ("invite_id") REFERENCES "group_invite" ("id") ON DELETE CASCADE;
 ALTER TABLE "group_invite_target" ADD FOREIGN KEY ("nested_group_id") REFERENCES "nested_group" ("id") ON DELETE CASCADE;
 ALTER TABLE "user_identity" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE;

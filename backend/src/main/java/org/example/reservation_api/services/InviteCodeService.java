@@ -1,5 +1,6 @@
 package org.example.reservation_api.services;
 
+import lombok.extern.slf4j.Slf4j;
 import org.example.reservation_api.entities.GroupInvite;
 import org.example.reservation_api.entities.GroupInviteTarget;
 import org.example.reservation_api.repositories.GenericRepository;
@@ -12,6 +13,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 @Service
+@Slf4j
 public class InviteCodeService {
 
     private static final String ALPHA_NUMERIC = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
@@ -30,9 +32,13 @@ public class InviteCodeService {
      */
     public Optional<UUID> validateAndGetTargetGroupId(String code) {
         if (code == null || code.isBlank()) {
+            log.error("No code found ");
             return Optional.empty();
         }
-        return groupInviteRepository.findPrimaryGroupIdByActiveCode(code.trim().toUpperCase());
+        log.error("No code found ");
+        Optional<UUID> returnVal = groupInviteRepository.findPrimaryGroupIdByActiveCode(code.trim().toUpperCase());
+        log.error("return val " + returnVal.toString());
+        return returnVal;
     }
 
     /**

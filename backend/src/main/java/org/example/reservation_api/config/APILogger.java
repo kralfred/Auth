@@ -13,9 +13,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
@@ -25,9 +28,14 @@ import java.util.UUID;
 public class APILogger {
 
 
-    private GenericRepository genericRepository;
+    private final GenericRepository genericRepository;
+
+    public APILogger(GenericRepository genericRepository) {
+        this.genericRepository = genericRepository;
+    }
 
     @Around("execution(* org.example.reservation_api.controllers.*.*(..))")
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Object logStep(ProceedingJoinPoint joinPoint) throws Throwable {
         long start = System.currentTimeMillis();
 
@@ -56,21 +64,20 @@ public class APILogger {
         int status = 200;
 
         try {
-            // Execute controller method EXACTLY ONCE
             result = joinPoint.proceed();
-
-            // Extract HTTP status from ResponseEntity if returned
             if (result instanceof ResponseEntity<?> responseEntity) {
                 status = responseEntity.getStatusCode().value();
             }
-
             return result;
+        } catch (IllegalArgumentException e) {
+            status = 400; // Log validation/client errors as HTTP 400
+            throw e;
         } catch (Exception e) {
-            status = 500; // Mark failed requests as HTTP 500 internal server error
+            status = 500; // Log unexpected failures as HTTP 500
             throw e;
         } finally {
             long durationMs = System.currentTimeMillis() - start;
-
+            Instant now = Instant.now();
             // 4. Persist Audit Log in 'finally' block so failed requests are also logged
             ApiLog log = new ApiLog(
                     eventType,
@@ -79,7 +86,7 @@ public class APILogger {
                     status,
                     durationMs,
                     userId,
-                    Instant.now()
+                    Timestamp.from(now)
             );
 
             genericRepository.save("api_log",log);

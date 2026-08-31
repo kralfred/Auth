@@ -11,6 +11,7 @@ import org.springframework.stereotype.Repository;
 
 import javax.sql.DataSource;
 import java.lang.reflect.RecordComponent;
+import java.sql.Connection;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -33,26 +34,36 @@ public class GenericRepository {
     public <T extends Identifiable> T save(String tableName, T entity) {
         Map<String, Object> params = convertRecordToMap(entity);
 
-        String columns = String.join(", ", params.keySet());
-        String placeholders = params.keySet().stream()
+        // Collect keys into an explicit List to guarantee identical order for columns and placeholders
+        List<String> columnList = new ArrayList<>(params.keySet());
+
+        String columns = String.join(", ", columnList);
+        String placeholders = columnList.stream()
                 .map(col -> ":" + col)
                 .collect(Collectors.joining(", "));
 
-        String sql = String.format("INSERT INTO public.\"%s\" (%s) VALUES (%s)", tableName, columns, placeholders);
+        // Double-quote table name to safely handle reserved keywords like "user"
+        String sql = String.format("INSERT INTO \"%s\" (%s) VALUES (%s)", tableName, columns, placeholders);
 
         MapSqlParameterSource paramSource = new MapSqlParameterSource();
-        params.forEach((key, value) -> {
+        columnList.forEach(key -> {
+            Object value = params.get(key);
             if (value instanceof UUID) {
                 paramSource.addValue(key, value, java.sql.Types.OTHER);
+            } else if (value instanceof String) {
+                paramSource.addValue(key, value, java.sql.Types.VARCHAR);
             } else {
                 paramSource.addValue(key, value);
             }
         });
 
+        log.info("Executing SQL: {}", sql);
+
         jdbcClient.sql(sql)
                 .paramSource(paramSource)
                 .update();
 
+        log.info("Successfully inserted record into {}", tableName);
         return entity;
     }
     public <T extends Identifiable> List<T> findAll(Class<T> entityType) {
@@ -62,6 +73,16 @@ public class GenericRepository {
         return jdbcClient.sql(sql)
                 .query(entityType)
                 .list();
+    }
+    public void logDatabaseDetails() {
+        try (Connection conn = dataSource.getConnection()) {
+            log.info("Connected Database Product: {}", conn.getMetaData().getDatabaseProductName());
+            log.info("Connected Database URL: {}", conn.getMetaData().getURL());
+            log.info("Connected Database User: {}", conn.getMetaData().getUserName());
+            log.info("Current Active Schema: {}", conn.getSchema());
+        } catch (Exception e) {
+            log.error("Failed to fetch database connection metadata", e);
+        }
     }
 
     public void addGroupMembers(String tableName,
@@ -87,7 +108,8 @@ public class GenericRepository {
     }
 
     private Map<String, Object> convertRecordToMap(Object record) {
-        Map<String, Object> map = new HashMap<>();
+        // MUST use LinkedHashMap to preserve exact field declaration order
+        Map<String, Object> map = new LinkedHashMap<>();
         if (!record.getClass().isRecord()) {
             throw new IllegalArgumentException("Entity must be a Java record");
         }
@@ -95,7 +117,6 @@ public class GenericRepository {
         for (RecordComponent component : record.getClass().getRecordComponents()) {
             try {
                 Object value = component.getAccessor().invoke(record);
-                // Converts camelCase record fields (e.g. userId) to snake_case column names (user_id)
                 String columnName = camelToSnakeCase(component.getName());
                 map.put(columnName, value);
             } catch (Exception e) {
