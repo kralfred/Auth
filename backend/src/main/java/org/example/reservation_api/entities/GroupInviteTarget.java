@@ -6,4 +6,10 @@ public record GroupInviteTarget(
         UUID inviteId,
         UUID nestedGroupId,
         boolean isPrimary
-) {}
+) implements Identifiable {
+
+    @Override
+    public UUID id() {
+        return inviteId;
+    }
+}

@@ -38,3 +38,4 @@ ALTER TABLE public."user"
     ADD CONSTRAINT user_current_environment_fkey
         FOREIGN KEY (current_environment) REFERENCES public.nested_group(id)
             DEFERRABLE INITIALLY DEFERRED;
+

@@ -14,6 +14,7 @@ import org.example.reservation_api.repositories.PermissionRepository;
 import org.example.reservation_api.repositories.TokenRepository;
 import org.example.reservation_api.repositories.UserRepository;
 import org.example.reservation_api.services.JwtService;
+import org.example.reservation_api.services.PermissionService;
 import org.example.reservation_api.services.SessionService;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -36,8 +37,16 @@ public class MyCustomBouncer {
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
     private final PermissionRepository permissionRepository;
+    private final PermissionService permissionService;
     private final TokenRepository tokenRepository;
     private final SessionService sessionService;
+
+    public boolean can(UUID userId, UUID nestedGroupId, String permission) {
+        if (userId == null || nestedGroupId == null) {
+            return false;
+        }
+        return permissionService.hasPermission(userId, nestedGroupId, permission);
+    }
 
     @Transactional
     public LoginResponse tryLogin(LoginRequest request) throws UnknownHostException {

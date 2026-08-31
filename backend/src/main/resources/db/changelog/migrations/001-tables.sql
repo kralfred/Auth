@@ -3,7 +3,8 @@ CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 CREATE TABLE IF NOT EXISTS "user" (
                                       "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                       "username" VARCHAR(100) NOT NULL,
-                                      "current_environment" UUID NOT NULL
+                                      "default_group_id" UUID,
+                                      "current_environment" UUID
 );
 
 CREATE TABLE IF NOT EXISTS "custom_info" (
@@ -16,8 +17,7 @@ CREATE TABLE IF NOT EXISTS "user_info" (
                                            "user_id" UUID PRIMARY KEY,
                                            "email" VARCHAR(255) UNIQUE NOT NULL,
                                            "name" VARCHAR(100),
-                                           "password" VARCHAR(100),
-                                           "custom_info_id" UUID
+                                           "password" VARCHAR(100)
 );
 
 CREATE TABLE IF NOT EXISTS "group_invite" (
@@ -140,8 +140,9 @@ ALTER TABLE "group_invite_target" ADD FOREIGN KEY ("invite_id") REFERENCES "grou
 ALTER TABLE "group_invite_target" ADD FOREIGN KEY ("nested_group_id") REFERENCES "nested_group" ("id") ON DELETE CASCADE;
 ALTER TABLE "user_identity" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE;
 ALTER TABLE "user" ADD FOREIGN KEY ("current_environment") REFERENCES "nested_group" ("id");
-ALTER TABLE "session" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE;
-ALTER TABLE "session" ADD FOREIGN KEY ("device_id") REFERENCES "device" ("id") ON DELETE CASCADE;
+ALTER TABLE "user" ADD FOREIGN KEY ("default_group_id") REFERENCES "nested_group" ("id");
+ALTER TABLE "session" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE SET NULL;
+ALTER TABLE "session" ADD FOREIGN KEY ("device_id") REFERENCES "device" ("id") ON DELETE SET NULL;
 ALTER TABLE "device" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE;
 ALTER TABLE "refresh_token" ADD FOREIGN KEY ("session_id") REFERENCES "session" ("id") ON DELETE CASCADE;
 ALTER TABLE "nested_group" ADD FOREIGN KEY ("parent_group_id") REFERENCES "nested_group" ("id");

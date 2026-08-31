@@ -37,20 +37,21 @@ public class GenericRepository {
         String placeholders = params.keySet().stream()
                 .map(col -> ":" + col)
                 .collect(Collectors.joining(", "));
-        log.error("Save started user {} with groupId: {}");
+
         String sql = String.format("INSERT INTO public.\"%s\" (%s) VALUES (%s)", tableName, columns, placeholders);
 
-        log.info("DEBUG SQL: {}", sql);
-        log.info("DEBUG PARAMS: {}", params);
+        MapSqlParameterSource paramSource = new MapSqlParameterSource();
+        params.forEach((key, value) -> {
+            if (value instanceof UUID) {
+                paramSource.addValue(key, value, java.sql.Types.OTHER);
+            } else {
+                paramSource.addValue(key, value);
+            }
+        });
 
-        try {
-            jdbcClient.sql(sql)
-                    .paramSource(new MapSqlParameterSource(params))
-                    .update();
-        } catch (Exception e) {
-            log.error("\u001B[31m❌ Failed to insert into table public.\"{}\": {}\u001B[0m", tableName, e.getMessage(), e);
-            throw e;
-        }
+        jdbcClient.sql(sql)
+                .paramSource(paramSource)
+                .update();
 
         return entity;
     }
