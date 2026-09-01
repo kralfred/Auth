@@ -39,12 +39,12 @@ public class SessionService {
     }
 
     @Transactional
-    public SessionResult createSessionForDevice(UUID userId, String deviceId) {
+    public SessionResult createSessionForDevice(UUID userId, String deviceId, String dpopJkt) {
 
         // 1. Extract HTTP metadata
         String ipAddress = extractClientIp(request);
         String userAgent = request.getHeader("User-Agent");
-        String dpopJkt = request.getHeader("DPoP-JKT");
+
 
         // 2. Upsert Device (No JPA proxies needed, just pure IDs)
         Device device = new Device(deviceId, userId, userAgent, Instant.now(), Instant.now());
@@ -59,14 +59,14 @@ public class SessionService {
 
         // 4. Create new Session via simple record constructor
         Session session = new Session(userId, deviceId, dpopJkt, ipAddress, userAgent);
-        genericRepository.save("session", session);
+        sessionRepository.saveSession(session);
 
         // 5. Issue and store opaque refresh token
         String rawRefreshToken = jwtService.generateOpaqueRefreshToken();
         String hashedToken = SecurityUtils.hashToken(rawRefreshToken);
 
         RefreshToken refreshToken = new RefreshToken(session.id(), hashedToken);
-        genericRepository.save("refresh_name",refreshToken);
+        genericRepository.save("refresh_token",refreshToken);
 
         return new SessionResult(session.id(), rawRefreshToken);
     }

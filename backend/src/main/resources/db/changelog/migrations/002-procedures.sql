@@ -3,7 +3,7 @@ CREATE OR REPLACE FUNCTION fn_verify_user_credentials(
 )
     RETURNS TABLE (
                       user_id UUID,
-                      password_hash VARCHAR
+                      password VARCHAR
                   ) AS $$
 BEGIN
     RETURN QUERY
@@ -21,7 +21,7 @@ CREATE OR REPLACE FUNCTION fn_register_user(
     p_username VARCHAR,
     p_email VARCHAR,
     p_name VARCHAR,
-    p_password_hash VARCHAR
+    p_password VARCHAR
 )
     RETURNS UUID AS $$
 DECLARE
@@ -34,7 +34,7 @@ BEGIN
 
     -- 2. Insert corresponding profile and hashed password into "user_info"
     INSERT INTO "user_info" ("user_id", "email", "name", "password")
-    VALUES (v_user_id, p_email, p_name, p_password_hash);
+    VALUES (v_user_id, p_email, p_name, p_password);
 
     -- 3. Return the newly created user ID
     RETURN v_user_id;

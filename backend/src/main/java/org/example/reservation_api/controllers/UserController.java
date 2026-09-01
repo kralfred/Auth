@@ -3,7 +3,10 @@ package org.example.reservation_api.controllers;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.reservation_api.entities.User;
+import org.example.reservation_api.repositories.AbstractJdbcRepository;
 import org.example.reservation_api.repositories.UserRepository;
+import org.example.reservation_api.services.BaseService;
+import org.example.reservation_api.services.UserService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,10 +18,9 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/users")
-@RequiredArgsConstructor
-public class UserController {
+public class UserController extends BaseController<User> {
 
-    private final UserRepository userRepository;
-
-
+    public UserController(UserService userService) {
+        super(userService);
+    }
 }

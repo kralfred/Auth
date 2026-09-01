@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.reservation_api.entities.Identifiable;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.stereotype.Repository;
@@ -23,6 +24,7 @@ public class GenericRepository {
     private final JdbcClient jdbcClient;
     private final DataSource dataSource;
     private final JdbcTemplate jdbcTemplate;
+    private final NamedParameterJdbcTemplate namedParameterJdbcTemplate;
 
     public <T extends Identifiable> Optional<T> findById(String tableName, UUID id, Class<T> clazz) {
         String sql = "SELECT * FROM " + tableName + " WHERE id = :id";
@@ -31,27 +33,52 @@ public class GenericRepository {
                 .query(clazz)
                 .optional();
     }
+
+    public void saveMap(String tableName, Map<String, Object> parameters) {
+        StringJoiner columns = new StringJoiner(", ");
+        StringJoiner placeholders = new StringJoiner(", ");
+        MapSqlParameterSource paramSource = new MapSqlParameterSource();
+
+        parameters.forEach((column, value) -> {
+            columns.add("\"" + column + "\"");
+            placeholders.add(":" + column);
+
+            // Convert Instant to Timestamp if passed in map
+            if (value instanceof java.time.Instant instantVal) {
+                paramSource.addValue(column, java.sql.Timestamp.from(instantVal), java.sql.Types.TIMESTAMP);
+            } else if (value instanceof UUID) {
+                paramSource.addValue(column, value, java.sql.Types.OTHER);
+            } else {
+                paramSource.addValue(column, value);
+            }
+        });
+
+        String sql = String.format("INSERT INTO \"%s\" (%s) VALUES (%s)", tableName, columns, placeholders);
+        namedParameterJdbcTemplate.update(sql, paramSource);
+    }
     public <T extends Identifiable> T save(String tableName, T entity) {
         Map<String, Object> params = convertRecordToMap(entity);
-
-        // Collect keys into an explicit List to guarantee identical order for columns and placeholders
         List<String> columnList = new ArrayList<>(params.keySet());
 
-        String columns = String.join(", ", columnList);
+        String columns = columnList.stream()
+                .map(col -> "\"" + col + "\"")
+                .collect(Collectors.joining(", "));
+
         String placeholders = columnList.stream()
                 .map(col -> ":" + col)
                 .collect(Collectors.joining(", "));
 
-        // Double-quote table name to safely handle reserved keywords like "user"
         String sql = String.format("INSERT INTO \"%s\" (%s) VALUES (%s)", tableName, columns, placeholders);
 
         MapSqlParameterSource paramSource = new MapSqlParameterSource();
         columnList.forEach(key -> {
             Object value = params.get(key);
-            if (value instanceof UUID) {
+
+            if (value instanceof java.time.Instant instantVal) {
+                // Automatically convert Instant to Timestamp for database persistence
+                paramSource.addValue(key, java.sql.Timestamp.from(instantVal), java.sql.Types.TIMESTAMP);
+            } else if (value instanceof UUID) {
                 paramSource.addValue(key, value, java.sql.Types.OTHER);
-            } else if (value instanceof String) {
-                paramSource.addValue(key, value, java.sql.Types.VARCHAR);
             } else {
                 paramSource.addValue(key, value);
             }

@@ -69,4 +69,18 @@ SELECT pid, usename, state, query, age(clock_timestamp(), query_start)
 FROM pg_stat_activity
 WHERE state != 'idle' AND pid != pg_backend_pid();
 
-SELECT * FROM user_info
+INSERT INTO "api_log"
+(id, event_type, method, path, status, duration_ms, user_id, created_at, error_details)
+VALUES
+    (:id, :event_type, :method, :path, :status, :duration_ms, :user_id, :created_at, :error_details::jsonb)
+
+SELECT column_name, data_type
+FROM information_schema.columns
+WHERE table_name = 'api_log';
+
+SELECT user_id, COUNT(*)
+FROM user_info
+GROUP BY user_id
+HAVING COUNT(*) > 1;
+
+DELETE FROM "user_info" WHERE user_id = '35b3ab8c-34f0-48f8-a027-789e757d9efe';

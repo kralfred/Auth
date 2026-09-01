@@ -129,6 +129,7 @@ CREATE TABLE IF NOT EXISTS "group_permission" (
                                                   "target_users_group" UUID NOT NULL
 );
 
+
 CREATE TABLE IF NOT EXISTS "api_log" (
                                          "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                          "event_type" VARCHAR(100) NOT NULL,
@@ -137,10 +138,13 @@ CREATE TABLE IF NOT EXISTS "api_log" (
                                          "status" INTEGER NOT NULL,
                                          "duration_ms" BIGINT NOT NULL,
                                          "user_id" UUID,
-                                         "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW()
+                                         "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+                                         error_details JSONB
 );
 
 -- Foreign Key Constraints
+CREATE INDEX idx_api_log_error_details ON api_log USING GIN (error_details);
+CREATE INDEX idx_api_log_created_at ON api_log (created_at DESC);
 ALTER TABLE "user_info" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id") ON DELETE CASCADE;
 ALTER TABLE "group_invite_target" ADD FOREIGN KEY ("invite_id") REFERENCES "group_invite" ("id") ON DELETE CASCADE;
 ALTER TABLE "group_invite_target" ADD FOREIGN KEY ("nested_group_id") REFERENCES "nested_group" ("id") ON DELETE CASCADE;

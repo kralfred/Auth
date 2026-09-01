@@ -5,6 +5,8 @@ import org.example.reservation_api.entities.Device;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Timestamp;
+
 @Repository
 @RequiredArgsConstructor
 public class DeviceRepository {
@@ -25,8 +27,8 @@ public class DeviceRepository {
                 .param("id", device.id())
                 .param("userId", device.userId())
                 .param("userAgent", device.userAgent())
-                .param("lastLoginAt", device.lastLoginAt())
-                .param("createdAt", device.createdAt())
+                .param("lastLoginAt", device.lastLoginAt() != null ? Timestamp.from(device.lastLoginAt()) : null)
+                .param("createdAt", device.createdAt() != null ? Timestamp.from(device.createdAt()) : null)
                 .update();
     }
 }

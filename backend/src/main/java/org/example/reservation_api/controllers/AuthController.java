@@ -27,9 +27,14 @@ public class AuthController {
     private final UserService userService;
 
     @PostMapping("/login")
-    public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) throws UnknownHostException {
-            return ResponseEntity.ok(bouncer.tryLogin(request));
-        }
+    public ResponseEntity<LoginResponse> login(
+            @Valid @RequestBody LoginRequest loginRequest,
+            @RequestHeader(value = "DPoP", required = false) String dpopHeader
+    ) throws UnknownHostException {
+
+        LoginResponse response = bouncer.tryLogin(loginRequest, dpopHeader);
+        return ResponseEntity.ok(response);
+    }
 
 
     @PostMapping("/register")

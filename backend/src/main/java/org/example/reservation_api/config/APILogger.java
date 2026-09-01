@@ -1,9 +1,13 @@
 package org.example.reservation_api.config;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
+import org.example.reservation_api.DTO.ErrorDetails;
 import org.example.reservation_api.entities.ApiLog;
 import org.example.reservation_api.repositories.APILogRepository;
 import org.example.reservation_api.repositories.GenericRepository;
@@ -23,15 +27,20 @@ import java.time.Instant;
 import java.util.Map;
 import java.util.UUID;
 
+
+
 @Aspect
 @Component
+@Slf4j
 public class APILogger {
 
-
+    private final ObjectMapper objectMapper = new ObjectMapper();
     private final GenericRepository genericRepository;
+    private final APILogRepository logRepository;
 
-    public APILogger(GenericRepository genericRepository) {
+    public APILogger(GenericRepository genericRepository, APILogRepository logRepository) {
         this.genericRepository = genericRepository;
+        this.logRepository = logRepository;
     }
 
     @Around("execution(* org.example.reservation_api.controllers.*.*(..))")
@@ -46,15 +55,7 @@ public class APILogger {
         String path = (request != null) ? request.getRequestURI() : "UNKNOWN";
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        UUID userId = null;
-        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof UserDetails userDetails) {
-            // Extract UUID if user details or principal holds it, otherwise keep null for guests
-            // userId = userDetails.getId();
-        }
-
-        String username = (auth != null && auth.isAuthenticated() && !"anonymousUser".equals(auth.getName()))
-                ? auth.getName()
-                : "GUEST";
+        UUID userId = null; // Map user ID from auth context if available
 
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getTarget().getClass().getSimpleName();
@@ -62,6 +63,7 @@ public class APILogger {
 
         Object result = null;
         int status = 200;
+        ErrorDetails errorDetails = null;
 
         try {
             result = joinPoint.proceed();
@@ -70,26 +72,43 @@ public class APILogger {
             }
             return result;
         } catch (IllegalArgumentException e) {
-            status = 400; // Log validation/client errors as HTTP 400
+            status = 400;
+            errorDetails = new ErrorDetails("INVALID_ARGUMENT", e.getClass().getName(), e.getMessage());
             throw e;
         } catch (Exception e) {
-            status = 500; // Log unexpected failures as HTTP 500
+            status = 500;
+            errorDetails = new ErrorDetails("INTERNAL_SERVER_ERROR", e.getClass().getName(), e.getMessage());
             throw e;
         } finally {
             long durationMs = System.currentTimeMillis() - start;
             Instant now = Instant.now();
-            // 4. Persist Audit Log in 'finally' block so failed requests are also logged
-            ApiLog log = new ApiLog(
+
+            String errorDetailsJson = null;
+            if (errorDetails != null) {
+                try {
+                    errorDetailsJson = objectMapper.writeValueAsString(errorDetails);
+                } catch (JsonProcessingException e) {
+                    errorDetailsJson = errorDetails.toString(); // Fallback to plain string
+                }
+            }
+
+// Pass the serialized JSON string (or null) to your log entity:
+            ApiLog apiLog = new ApiLog(
                     eventType,
                     httpMethod,
                     path,
                     status,
                     durationMs,
                     userId,
-                    Timestamp.from(now)
+                    Timestamp.from(now),
+                    errorDetailsJson // Pass String instead of raw ErrorDetails object
             );
 
-            genericRepository.save("api_log",log);
+            try {
+                logRepository.saveLog(apiLog);
+            } catch (Exception logEx) {
+                log.error("Failed to persist API log: {}", logEx.getMessage());
+            }
         }
     }
 }

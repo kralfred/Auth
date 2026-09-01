@@ -18,7 +18,7 @@ import java.util.UUID;
 @Repository
 @RequiredArgsConstructor
 @Slf4j
-public class TokenRepository  {
+public class  TokenRepository  {
 
     private final JdbcClient jdbcClient;
 

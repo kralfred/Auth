@@ -5,6 +5,6 @@ import java.util.UUID;
 public record UserCredentialsProjection(
         UUID userId,
         String username,
-        String passwordHash,
+        String password,
         UUID currentEnvironment
 ) {}

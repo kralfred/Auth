@@ -1,9 +1,14 @@
 package org.example.reservation_api.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.postgresql.util.PGobject;
+import java.sql.SQLException;
 
 public final class SecurityUtils {
 
@@ -27,6 +32,22 @@ public final class SecurityUtils {
             return HexFormat.of().formatHex(hash);
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException("SHA-256 algorithm unavailable", e);
+        }
+    }
+
+    private static final ObjectMapper objectMapper = new ObjectMapper();
+
+    public static PGobject toPgObject(Object object) {
+        if (object == null) {
+            return null;
+        }
+        try {
+            PGobject pgObject = new PGobject();
+            pgObject.setType("jsonb");
+            pgObject.setValue(objectMapper.writeValueAsString(object));
+            return pgObject;
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to serialize object to JSONB", e);
         }
     }
 }

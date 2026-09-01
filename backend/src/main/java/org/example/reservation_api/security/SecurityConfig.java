@@ -37,7 +37,7 @@ public class SecurityConfig {
         return username -> userRepository.findCredentialsByUsername(username)
                 .map(user -> org.springframework.security.core.userdetails.User.builder()
                         .username(user.username())
-                        .password(user.passwordHash())
+                        .password(user.password())
                         .authorities(Collections.emptyList()) // Add roles/granted authorities if applicable
                         .build())
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
