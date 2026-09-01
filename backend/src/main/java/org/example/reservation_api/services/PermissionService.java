@@ -34,10 +34,7 @@ public class PermissionService {
         permissionRepository.assignPermissionToGroup(ownerUsersGroupId, permissionId, targetNestedGroupId);
     }
 
-    /**
-     * Evaluates whether a user has permission to perform an action on a nested group.
-     * Group owners automatically bypass explicit permission checks.
-     */
+
     public boolean hasPermission(UUID userId, UUID nestedGroupId, String permissionName) {
         // 1. Owner short-circuit: Owners implicitly have all permissions
         if (permissionRepository.isGroupOwner(userId, nestedGroupId)) {

@@ -45,7 +45,9 @@ CREATE OR REPLACE FUNCTION fn_get_entity_access(
     p_user_id UUID,
     p_group_id UUID
 )
-    RETURNS TABLE (entity_type VARCHAR) AS $$
+    RETURNS TABLE (entity_type VARCHAR)
+    STABLE -- Tell Postgres this function only reads data
+    LANGUAGE plpgsql AS $$
 BEGIN
     RETURN QUERY
         SELECT DISTINCT e.name
@@ -57,7 +59,9 @@ BEGIN
         WHERE gm.user_id = p_user_id
           AND gm.group_id = p_group_id;
 END;
-$$ LANGUAGE plpgsql;
+$$;
+
+
 
 CREATE OR REPLACE FUNCTION fn_check_username_email(
     p_username UUID,

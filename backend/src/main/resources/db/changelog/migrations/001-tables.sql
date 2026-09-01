@@ -139,7 +139,7 @@ CREATE TABLE IF NOT EXISTS "api_log" (
                                          "duration_ms" BIGINT NOT NULL,
                                          "user_id" UUID,
                                          "created_at" TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-                                         error_details JSONB
+                                         "error_details" JSONB
 );
 
 -- Foreign Key Constraints

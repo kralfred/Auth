@@ -35,11 +35,9 @@ import java.util.UUID;
 public class APILogger {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
-    private final GenericRepository genericRepository;
     private final APILogRepository logRepository;
 
-    public APILogger(GenericRepository genericRepository, APILogRepository logRepository) {
-        this.genericRepository = genericRepository;
+    public APILogger(APILogRepository logRepository) {
         this.logRepository = logRepository;
     }
 
@@ -88,11 +86,11 @@ public class APILogger {
                 try {
                     errorDetailsJson = objectMapper.writeValueAsString(errorDetails);
                 } catch (JsonProcessingException e) {
-                    errorDetailsJson = errorDetails.toString(); // Fallback to plain string
+                    errorDetailsJson = errorDetails.toString();
                 }
             }
 
-// Pass the serialized JSON string (or null) to your log entity:
+
             ApiLog apiLog = new ApiLog(
                     eventType,
                     httpMethod,
@@ -101,7 +99,7 @@ public class APILogger {
                     durationMs,
                     userId,
                     Timestamp.from(now),
-                    errorDetailsJson // Pass String instead of raw ErrorDetails object
+                    errorDetailsJson
             );
 
             try {

@@ -42,7 +42,7 @@ public class MyCustomBouncer {
 
     @Transactional
     public LoginResponse tryLogin(LoginRequest request, String dpopHeader) throws UnknownHostException {
-        // 1. Validate credentials
+
         UserCredentialsProjection credentials = userRepository.findCredentialsByUsername(request.username())
                 .orElseThrow(() -> new BadCredentialsException("Invalid credentials"));
 
@@ -50,13 +50,11 @@ public class MyCustomBouncer {
             throw new BadCredentialsException("Invalid credentials");
         }
         log.error("Correct credentials for " + request.username());
-        // 2. Compute/Verify dpop_jkt from incoming DPoP proof header
         String dpopJkt = null;
         if (dpopHeader != null && !dpopHeader.isBlank()) {
             dpopJkt = dpopService.verifyAndExtractJkt(dpopHeader, "POST", "/api/auth/login");
         }
         log.error("dpopJkt extracted " + dpopJkt);
-        // 3. Pass dpopJkt down to bind it with the refresh token session record
         SessionService.SessionResult sessionResult = sessionService.createSessionForDevice(
                 credentials.userId(),
                 request.deviceId(),
@@ -71,13 +69,17 @@ public class MyCustomBouncer {
         }
         List<String> pageAccess = permissionRepository.findUserEntityAccess(credentials.userId(), currentGroupId);
         long expiration = 1200;
+        if (pageAccess == null || pageAccess.isEmpty()) {
+            log.error("pageAccess is empty for user: " + credentials.userId());
+        } else {
+            log.error("pageAccess not empty, first access element: " + pageAccess.getFirst());
+        }
 
-        // 5. Generate Access Token bound to the DPoP JKT thumbprint[cite: 6]
         String accessToken = jwtService.generateAccessToken(
                 request.username(),
                 currentGroupId,
                 pageAccess,
-                dpopJkt // Pass jkt so JwtService includes {"cnf": {"jkt": dpopJkt}} claim
+                dpopJkt
         );
         log.error("Token generated " + accessToken);
         return new LoginResponse(
