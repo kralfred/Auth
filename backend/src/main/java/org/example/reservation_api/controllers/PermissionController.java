@@ -32,11 +32,7 @@ public class PermissionController {
             @RequestParam UUID ownerUsersGroupId,
             @RequestBody CreatePermissionRequest request
     ) {
-        permissionService.createAndAssignPermission(
-                targetNestedGroupId,
-                ownerUsersGroupId,
-                request
-        );
+
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 }

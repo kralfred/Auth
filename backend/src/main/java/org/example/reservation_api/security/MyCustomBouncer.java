@@ -41,6 +41,11 @@ public class MyCustomBouncer {
     }
 
     @Transactional
+    public void checkToken(String token){
+        jwtService.validateToken(token);
+    }
+
+    @Transactional
     public LoginResponse tryLogin(LoginRequest request, String dpopHeader) throws UnknownHostException {
 
         UserCredentialsProjection credentials = userRepository.findCredentialsByUsername(request.username())
@@ -77,6 +82,7 @@ public class MyCustomBouncer {
 
         String accessToken = jwtService.generateAccessToken(
                 request.username(),
+                credentials.userId(),
                 currentGroupId,
                 pageAccess,
                 dpopJkt

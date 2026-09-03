@@ -37,7 +37,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         final String authHeader = request.getHeader("Authorization");
 
-        // 1. Pass-through if no Bearer token is provided
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
@@ -46,19 +45,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt = authHeader.substring(7);
 
         try {
-            // 2. Extract JWT claims
             Claims claims = jwtService.extractAllClaims(jwt);
             String username = claims.getSubject();
 
-            // Extract custom nested group ID claim from JWT
             String nestedGroupIdStr = claims.get("env_id", String.class);
 
-            // 3. Set ThreadLocal context for the active request thread
+
             if (nestedGroupIdStr != null) {
                 CurrentEnvironmentContext.set(UUID.fromString(nestedGroupIdStr));
             }
 
-            // 4. Authenticate in Spring Security Context
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
                 if (jwtService.validateToken(jwt).isValid()) { // Validate signature & expiration
@@ -75,14 +71,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 }
             }
 
-            // 5. Pass down the filter chain
             filterChain.doFilter(request, response);
 
         } catch (Exception e) {
             logger.error("Could not set user authentication", e);
             filterChain.doFilter(request, response);
         } finally {
-            // 6. CRUCIAL: Always clear ThreadLocal when request finishes
             CurrentEnvironmentContext.clear();
         }
     }

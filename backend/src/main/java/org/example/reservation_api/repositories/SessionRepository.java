@@ -34,6 +34,7 @@ public class SessionRepository {
                 .optional();
     }
 
+
     public void saveSession(Session session) {
         Map<String, Object> params = new HashMap<>();
         params.put("id", session.id());

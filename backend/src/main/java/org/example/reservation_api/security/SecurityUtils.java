@@ -8,20 +8,29 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.postgresql.util.PGobject;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 import java.sql.SQLException;
+import java.util.UUID;
 
 public final class SecurityUtils {
 
+
+    public record UserPrincipal(UUID id, String username) {}
     private SecurityUtils() {
         // Private constructor to prevent instantiation
     }
 
-    /**
-     * Hashes a raw opaque token string using SHA-256 for secure database storage.
-     *
-     * @param rawToken The plain text refresh token
-     * @return The hex-encoded SHA-256 hash string (64 characters)
-     */
+    public static UUID getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth != null && auth.getPrincipal() instanceof UserPrincipal principal) {
+            return principal.id();
+        }
+
+        throw new IllegalStateException("No authenticated user ID found in security context");
+    }
     public static String hashToken(String rawToken) {
         if (rawToken == null || rawToken.isBlank()) {
             throw new IllegalArgumentException("Token cannot be null or empty");

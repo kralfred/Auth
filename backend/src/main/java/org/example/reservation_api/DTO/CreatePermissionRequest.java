@@ -1,18 +1,22 @@
 package org.example.reservation_api.DTO;
 
-public record CreatePermissionRequest(
-        String targetTable,  // e.g., "user_logs", "nested_group", "user_info"
-        String attribute,    // e.g., "*", "name", "email", "id"
-        String actionType    // e.g., "CREATE", "READ", "UPDATE", "DELETE"
-) {
-    /**
-     * Generates a standardized unique name for this permission.
-     * Example: "DELETE:user_logs:id" or "UPDATE:nested_group:name"
-     */
-    public String toPermissionName() {
-        return String.format("%s:%s:%s",
-                actionType.toUpperCase(),
-                targetTable.toLowerCase(),
-                attribute.toLowerCase());
-    }
+import com.fasterxml.jackson.annotation.JsonSubTypes;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+import org.example.reservation_api.DTO.AttributeMutationPermissionRequest;
+import org.example.reservation_api.DTO.EntityCreationPermissionRequest;
+
+@JsonTypeInfo(
+        use = JsonTypeInfo.Id.NAME,
+        include = JsonTypeInfo.As.PROPERTY,
+        property = "permissionType"
+)
+@JsonSubTypes({
+        @JsonSubTypes.Type(value = EntityCreationPermissionRequest.class, name = "ENTITY_CREATION"),
+        @JsonSubTypes.Type(value = AttributeMutationPermissionRequest.class, name = "ATTRIBUTE_MUTATION")
+})
+public sealed interface CreatePermissionRequest
+        permits EntityCreationPermissionRequest, AttributeMutationPermissionRequest {
+
+    String action();
+    String entityTypeName();
 }

@@ -18,6 +18,41 @@ public class PermissionRepository {
         this.jdbcClient = jdbcClient;
     }
 
+    public List<String> getPermissionTargetAttributes(UUID permissionId){
+        String sql = "SELECT ta.name FROM targetable_attribute ta JOIN permission_attribute pa ON ta.id = pa.permission_id " +
+                "WHERE pa = :permissionId";
+        return jdbcClient.sql(sql)
+                .param(permissionId)
+                .query(String.class)
+                .list();
+    }
+
+    public UUID addTargetableAttribute(String entityTypeName, String attributeName) {
+        String sql = """
+            INSERT INTO targetable_attribute (id, entity_type_id, name)
+            VALUES (
+                gen_random_uuid(),
+                (SELECT id FROM entity_type WHERE name = :entityTypeName),
+                :attributeName
+            )
+            RETURNING id;
+        """;
+
+        return jdbcClient.sql(sql)
+                .param("entityTypeName", entityTypeName)
+                .param("attributeName", attributeName)
+                .query(UUID.class)
+                .single();
+    }
+    public void addNewEntityType(String name){
+        String sql = "INSERT INTO entity_type(name) VALUES ('name')";
+        jdbcClient.sql(sql);
+
+    }
+
+
+
+
     /**
      * 1. Resolves or creates an action_id (e.g., "DELETE")
      */
