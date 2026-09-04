@@ -28,6 +28,10 @@ export class RegisterView {
                     <input type="email" name="email" placeholder="Email Address" required>
                     <input type="password" name="password" placeholder="Password" required>
                     
+                    <!-- Added Optional Fields -->
+                    <input type="text" name="name" placeholder="Full Name (Optional)">
+                    <input type="text" name="inviteCode" placeholder="Invite Code (Optional)">
+                    
                     <button type="submit" class="register-btn">Sign Up</button>
                 </form>
                 <p class="login-link">
@@ -41,11 +45,14 @@ export class RegisterView {
             const formData = new FormData(e.target);
             
             try {
-                await this.authService.register(
-                    formData.get("username"),
-                    formData.get("email"),
-                    formData.get("password")
-                );
+                // Pass an object payload with all fields
+                await this.authService.register({
+                    username: formData.get("username"),
+                    email: formData.get("email"),
+                    password: formData.get("password"),
+                    name: formData.get("name") || null,       // Optional: fallback to null if empty
+                    inviteCode: formData.get("inviteCode") || null // Optional: fallback to null if empty
+                });
                 alert("Registration successful! You can now login.");
                 window.location.hash = "/login";
             } catch (err) {

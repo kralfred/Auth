@@ -72,7 +72,13 @@ console.warn("Token " + JSON.stringify(tokenObject));
         this.applyAuthentication(null, null);
         
     }
-    async register(email, username, password){
-       console.error("Login Error:" + this.userRepository.register(email, username, password)); 
+    async register(registrationData) {
+    try {
+        const response = await this.userRepository.register(registrationData);
+        return response;
+    } catch (error) {
+        console.error("Registration Error:", error.message);
+        throw error;
     }
+}
 }
