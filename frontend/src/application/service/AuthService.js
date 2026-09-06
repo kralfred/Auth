@@ -1,5 +1,5 @@
 // application/services/AuthService.js
-// application/services/AuthService.js
+import { Logger } from '../../infrastructure/UI/utils/Logger.js';
 export class AuthService {
     constructor(userRepository, tokenRepository, appState) {
         this.userRepository = userRepository;    // The API Repo
@@ -28,17 +28,25 @@ async applyAuthentication(userObject, tokenObject) {
         }
     }
 
-    async login(email, username, password) {
+
+async login(email, username, password) {
     try {
-
         const result = await this.userRepository.login(email, username, password);
-
         await this.applyAuthentication(result.user, result.token);
-
         window.location.hash = "/home";
-    } catch (error) {
-        console.error("Login Error:", error.message);
-        throw error;
+    } catch (err) {
+        // Updated condition to include AUTH_001 and 401/403 errors
+        if (
+            err.message.includes("AUTH_001") || 
+            err.message.includes("Invalid credentials") || 
+            err.message.includes("401") || 
+            err.message.includes("403")
+        ) {
+            Logger.domainError("Login failed due to authentication issue.", err.message);
+        } else {
+            // Standard system error for unhandled runtime crashes or server errors
+            console.error("Unhandled System Error:", err);
+        }
     }
 }
 
