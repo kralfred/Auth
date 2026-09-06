@@ -1,5 +1,5 @@
 package org.example.reservation_api.entities;
-import jakarta.persistence.*;
+
 
 import java.time.Instant;
 import java.util.UUID;

@@ -4,7 +4,6 @@ import io.jsonwebtoken.*;
 
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.reservation_api.DTO.TokenValidationResult;
 import org.example.reservation_api.entities.RefreshToken;

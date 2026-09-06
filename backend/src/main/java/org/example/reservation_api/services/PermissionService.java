@@ -1,6 +1,6 @@
 package org.example.reservation_api.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.example.reservation_api.DTO.CreatePermissionRequest;
 import org.example.reservation_api.repositories.PermissionRepository;
 import org.springframework.stereotype.Service;

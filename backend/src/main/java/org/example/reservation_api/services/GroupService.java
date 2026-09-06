@@ -1,6 +1,6 @@
 package org.example.reservation_api.services;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.example.reservation_api.entities.*;
 import org.example.reservation_api.repositories.*;
