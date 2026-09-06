@@ -41,12 +41,11 @@ public class SessionService {
     @Transactional
     public SessionResult createSessionForDevice(UUID userId, String deviceId, String dpopJkt) {
 
-        // 1. Extract HTTP metadata
+
         String ipAddress = extractClientIp(request);
         String userAgent = request.getHeader("User-Agent");
 
 
-        // 2. Upsert Device (No JPA proxies needed, just pure IDs)
         Device device = new Device(deviceId, userId, userAgent, Instant.now(), Instant.now());
         deviceRepository.upsert(device);
 
