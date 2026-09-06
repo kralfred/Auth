@@ -4,27 +4,24 @@ steps:
     entrypoint: gradle
     args: ['build', '-x', 'test']
     dir: 'backend'
-    # REMOVED the volumes block from here to stop the conflict
 
-  # Step 2: Run Liquibase migrations
+  # Step 2: Run Liquibase migrations against Neon DB directly during deployment
   - name: 'liquibase/liquibase:4.25.1'
     args:
       - '--changelog-file=db/changelog/db.changelog-master.xml'
-      - '--url=jdbc:postgresql://${_DB_URL}:${_DB_PORT}/${_DB_NAME}?currentSchema=${_DB_SCHEMA}'
+      - '--url=jdbc:postgresql://${_DB_URL}:${_DB_PORT}/${_DB_NAME}?sslmode=require&currentSchema=${_DB_SCHEMA}'
       - '--username=${_DB_USER}'
       - '--password=${_DB_PASSWORD}'
       - '--default-schema-name=${_DB_SCHEMA}'
-      - '--liquibase-schema-name=${_DB_SCHEMA}'
       - '--search-path=backend/src/main/resources/'
       - 'update'
 
-  # Step 3: Build the Docker Image with Layer Caching
+  # Step 3: Build the Docker Image
   - name: 'gcr.io/cloud-builders/docker'
     entrypoint: 'bash'
     args:
       - '-c'
       - |
-        # Use the new Artifact Registry path
         docker pull europe-central2-docker.pkg.dev/$PROJECT_ID/amazing-repo/amazing-api:latest || true
         docker build \
           -t europe-central2-docker.pkg.dev/$PROJECT_ID/amazing-repo/amazing-api:$SHORT_SHA \
@@ -32,7 +29,7 @@ steps:
           --cache-from europe-central2-docker.pkg.dev/$PROJECT_ID/amazing-repo/amazing-api:latest \
           -f Dockerfile .
 
-  # Step 4: Push to Artifact Registry
+  # Step 4: Push images to Artifact Registry
   - name: 'gcr.io/cloud-builders/docker'
     args: ['push', 'europe-central2-docker.pkg.dev/$PROJECT_ID/amazing-repo/amazing-api:$SHORT_SHA']
 
@@ -55,6 +52,7 @@ steps:
       - '--memory=1Gi'
       - '--set-env-vars'
       - '^#^DB_HOST=${_DB_URL}#DB_PORT=${_DB_PORT}#DB_NAME=${_DB_NAME}#DB_USERNAME=${_DB_USER}#DB_PASSWORD=${_DB_PASSWORD}#DB_SCHEMA=${_DB_SCHEMA}#JWT_SECRET=${_JWT_SECRET}#FRONTEND_URL=${_FRONTEND_URL}#SPRING_DATASOURCE_HIKARI_MAXIMUM_POOL_SIZE=2#SPRING_JPA_PROPERTIES_HIBERNATE_DEFAULT_SCHEMA=${_DB_SCHEMA}'
+
 images:
   - 'europe-central2-docker.pkg.dev/$PROJECT_ID/amazing-repo/amazing-api:$SHORT_SHA'
   - 'europe-central2-docker.pkg.dev/$PROJECT_ID/amazing-repo/amazing-api:latest'
@@ -62,6 +60,3 @@ images:
 options:
   logging: CLOUD_LOGGING_ONLY
   machineType: 'E2_HIGHCPU_8'
-  volumes:
-    - name: 'gradle-cache'
-      path: '/root/.gradle'
