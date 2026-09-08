@@ -23,18 +23,16 @@ public class PermissionAdminService {
 
     @Transactional
     public UUID registerNewAttribute(CreateAttributeRequest request) {
-        UUID activeGroupId = CurrentEnvironmentContext.get();
         UUID currentUserId = SecurityUtils.getCurrentUserId();
 
-
-        boolean isAdmin = permissionCheckRepository.hasPermission(
-                activeGroupId,
+        // Verify user is in the Root/Main group with permission to create global attributes
+        boolean isSystemAdmin = permissionCheckRepository.hasSystemPermission(
                 currentUserId,
                 "MANAGE_SYSTEM_PERMISSIONS"
         );
 
-        if (!isAdmin) {
-            throw new AccessDeniedException("Access denied: Permission Administration privileges required.");
+        if (!isSystemAdmin) {
+            throw new AccessDeniedException("Access denied: Global permission administration privileges required.");
         }
 
         return adminRepository.createAttribute(request.entityTypeName(), request.attributeName());

@@ -5,7 +5,7 @@ import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
-import org.example.reservation_api.DTO.TokenValidationResult;
+import org.example.reservation_api.DTO.AuthDTOs.*;
 import org.example.reservation_api.entities.RefreshToken;
 import org.example.reservation_api.entities.Session;
 import org.example.reservation_api.entities.User;

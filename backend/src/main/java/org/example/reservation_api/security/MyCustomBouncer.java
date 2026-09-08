@@ -3,8 +3,7 @@ package org.example.reservation_api.security;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.reservation_api.DTO.LoginRequest;
-import org.example.reservation_api.DTO.LoginResponse;
+import org.example.reservation_api.DTO.AuthDTOs.*;
 import org.example.reservation_api.projections.UserCredentialsProjection;
 import org.example.reservation_api.repositories.PermissionRepository;
 import org.example.reservation_api.repositories.SystemSettingRepository;

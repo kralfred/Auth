@@ -16,14 +16,15 @@ public class PermissionAdminRepository {
 
     public UUID createAttribute(String entityTypeName, String attributeName) {
         String sql = """
-            INSERT INTO targetable_attribute (id, entity_type_id, name)
-            VALUES (
-                gen_random_uuid(),
-                (SELECT id FROM entity_type WHERE name = :entityTypeName),
-                :attributeName
-            )
-            RETURNING id;
-        """;
+        INSERT INTO targetable_attribute (id, entity_type_id, name)
+        VALUES (
+            gen_random_uuid(),
+            (SELECT id FROM entity_type WHERE name = :entityTypeName),
+            :attributeName
+        )
+        ON CONFLICT (entity_type_id, name) DO UPDATE SET name = EXCLUDED.name
+        RETURNING id;
+    """;
 
         return jdbcClient.sql(sql)
                 .param("entityTypeName", entityTypeName)

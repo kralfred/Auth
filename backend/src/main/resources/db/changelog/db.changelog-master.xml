@@ -6,19 +6,19 @@
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.24.xsd">
 
     <changeSet id="001-tables" author="alfred">
-        <sqlFile path="db/changelog/migrations/001-tables.sql"/>
+        <sqlFile path="/db/changelog/migrations/001-tables.sql"/>
     </changeSet>
 
     <changeSet id="002-procedures" author="alfred" runOnChange="true">
-        <sqlFile path="db/changelog/migrations/002-procedures.sql" splitStatements="false"/>
+        <sqlFile path="/db/changelog/migrations/002-procedures.sql" splitStatements="false"/>
     </changeSet>
 
     <changeSet id="003-views" author="alfred" runOnChange="true">
-        <sqlFile path="db/changelog/migrations/003-views.sql"/>
+        <sqlFile path="/db/changelog/migrations/003-views.sql"/>
     </changeSet>
 
     <changeSet id="004-data" author="alfred" runOnChange="true">
-        <sqlFile path="db/changelog/migrations/004-data.sql"/>
+        <sqlFile path="/db/changelog/migrations/004-data.sql"/>
     </changeSet>
 
 </databaseChangeLog>

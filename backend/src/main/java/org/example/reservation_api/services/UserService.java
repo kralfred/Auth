@@ -1,8 +1,7 @@
 package org.example.reservation_api.services;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.reservation_api.DTO.RegistrationRequest;
-import org.example.reservation_api.DTO.RegistrationResponse;
+import org.example.reservation_api.DTO.AuthDTOs.*;
 import org.example.reservation_api.entities.*;
 import org.example.reservation_api.repositories.*;
 import org.springframework.security.crypto.password.PasswordEncoder;

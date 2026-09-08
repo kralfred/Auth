@@ -18,7 +18,7 @@ public class PermissionAdminController {
 
     private final PermissionAdminService adminService;
 
-    @PostMapping("/attributes")
+    @PostMapping("/attributes/create")
     public ResponseEntity<Map<String, Object>> createAttribute(@RequestBody CreateAttributeRequest request) {
         UUID attributeId = adminService.registerNewAttribute(request);
 

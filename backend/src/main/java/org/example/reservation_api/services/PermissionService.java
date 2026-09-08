@@ -23,7 +23,9 @@ public class PermissionService {
     }
 
 
+    public void createPermission(){
 
+    }
 
     public boolean hasPermission(UUID userId, UUID nestedGroupId, String permissionName) {
         if (permissionRepository.isGroupOwner(userId, nestedGroupId)) {
