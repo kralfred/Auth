@@ -1,8 +1,9 @@
 package org.example.reservation_api.services;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.reservation_api.DTO.ConfigureRuleRequest;
-import org.example.reservation_api.DTO.CreateAttributeRequest;
+import org.example.reservation_api.DTO.PermissionDTOs.*;
 import org.example.reservation_api.messages.AccessDeniedException;
 import org.example.reservation_api.repositories.PermissionAdminRepository;
 import org.example.reservation_api.repositories.PermissionCheckRepository;
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class PermissionAdminService {
 
     private final PermissionAdminRepository adminRepository;
@@ -25,6 +27,8 @@ public class PermissionAdminService {
     public UUID registerNewAttribute(CreateAttributeRequest request) {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
 
+        log.error("Failed to persist API log: {}" + currentUserId);
+        System.out.println("DEBUG Active User ID: " + currentUserId);
         // Verify user is in the Root/Main group with permission to create global attributes
         boolean isSystemAdmin = permissionCheckRepository.hasSystemPermission(
                 currentUserId,

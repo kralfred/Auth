@@ -56,6 +56,7 @@ async handleUnauthorizedAccess() {
     
 console.warn("Token " + JSON.stringify(tokenObject));
     if (tokenObject && tokenObject !== "undefined") { 
+        console.warn("Trying to validate ", tokenObject);
         try {
              
             const response = await this.userRepository.validateToken(tokenObject.value);

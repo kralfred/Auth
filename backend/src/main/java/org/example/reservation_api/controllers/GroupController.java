@@ -3,7 +3,6 @@ package org.example.reservation_api.controllers;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.example.reservation_api.DTO.GroupDtos.*;
-import org.example.reservation_api.DTO.RoleAssignmentRequest;
 import org.example.reservation_api.entities.User;
 import org.example.reservation_api.services.GroupService;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +23,6 @@ public class GroupController {
     @PostMapping("/assign-role")
     public ResponseEntity<Void> assignRole(
             @PathVariable UUID groupId,
-            @RequestBody RoleAssignmentRequest request,
             Authentication authentication) {
 
         User actor = (User) authentication.getPrincipal();

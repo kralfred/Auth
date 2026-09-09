@@ -95,14 +95,19 @@ public class JwtService {
                     .parseSignedClaims(token)
                     .getPayload();
 
-            UUID tokenId = UUID.fromString(claims.getId());
-            UUID userId = UUID.fromString(claims.get("userId", String.class));
+            String jti = claims.getId();
+            UUID tokenId = jti != null ? UUID.fromString(jti) : null;
+
+            String userIdStr = claims.get("userId", String.class);
+            UUID userId = userIdStr != null ? UUID.fromString(userIdStr) : null;
 
             return new TokenValidationResult(tokenId, userId, claims, TokenValidationResult.ValidationStatus.VALID);
 
         } catch (ExpiredJwtException e) {
             return new TokenValidationResult(null, null, null, TokenValidationResult.ValidationStatus.EXPIRED);
         } catch (Exception e) {
+            System.err.println("VALIDATION FAILED EXCEPTION: " + e.getMessage());
+            e.printStackTrace();
             return new TokenValidationResult(null, null, null, TokenValidationResult.ValidationStatus.INVALID);
         }
     }

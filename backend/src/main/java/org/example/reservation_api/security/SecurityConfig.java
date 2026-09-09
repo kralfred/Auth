@@ -74,8 +74,17 @@ public class SecurityConfig {
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users").hasAnyAuthority("view_users", "ROLE_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/users/*/modify").hasAuthority("can_modify_users")
+                        .requestMatchers("/api/admin/**", "/api/attributes/**").authenticated() // Allows any authenticated user through the filter
                         .requestMatchers("/api/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
+                )
+                .exceptionHandling(exceptions -> exceptions
+                        .accessDeniedHandler((request, response, accessDeniedException) -> {
+                            System.err.println("ACCESS DENIED: " + accessDeniedException.getMessage());
+                            response.setStatus(403);
+                            response.setContentType("application/json");
+                            response.getWriter().write("{\"error\": \"" + accessDeniedException.getMessage() + "\"}");
+                        })
                 )
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)

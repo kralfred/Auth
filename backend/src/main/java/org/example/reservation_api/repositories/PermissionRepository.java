@@ -6,6 +6,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,144 +28,85 @@ public class PermissionRepository {
                 .list();
     }
 
-    public UUID addTargetableAttribute(String entityTypeName, String attributeName) {
+
+
+    public void createPermission(UUID permissionId, String permissionName, UUID actionId){
+        String insertPermissionSql = """
+        INSERT INTO permission (id, name, action_id, is_composite)
+        VALUES (:id, :name, :actionId, false)
+    """;
+
+        jdbcClient.sql(insertPermissionSql)
+                .param("id", permissionId)
+                .param("name", permissionName)
+                .param("actionId", actionId)
+                .update();
+    }
+    public void addAttributeToPermission(UUID nestedGroupId, UUID permissionId, List<UUID> attributeIds, Boolean isRequired, String autoFillValue){
+     String sql = "INSERT INTO permission_attribute (nested_group_id, permission_id, targetable_attribute_id, is_required, auto_fill_value)" +
+             "VALUES (:nestedGroupId, :permissionId, :attributeId, :isRequired, :autoFillValue)\n" +
+             "            ON CONFLICT DO NOTHING;";
+
+     var batch = attributeIds.stream().map(attributeId -> Map.of("nestedGroupId", nestedGroupId,
+             "permissionId", permissionId,
+             "attributeId", attributeId,
+             "isRequired", isRequired != null ? isRequired : false,
+             "autoFillValue", autoFillValue != null ? autoFillValue : "")).toArray(Map[]::new);
+     jdbcClient.sql(sql)
+             .paramSource(batch)
+             .update();
+    }
+    public boolean areAttributesAllowedForGroup(UUID nestedGroupId, List<UUID> targetableAttributeIds) {
+        if (targetableAttributeIds == null || targetableAttributeIds.isEmpty()) {
+            return true; // Nothing to validate
+        }
+
         String sql = """
-            INSERT INTO targetable_attribute (id, entity_type_id, name)
-            VALUES (
-                gen_random_uuid(),
-                (SELECT id FROM entity_type WHERE name = :entityTypeName),
-                :attributeName
-            )
-            RETURNING id;
+            SELECT COUNT(DISTINCT targetable_attribute_id)
+            FROM permission_attribute
+            WHERE nested_group_id = :nestedGroupId
+              AND targetable_attribute_id = ANY(:attributeIds)
         """;
 
-        return jdbcClient.sql(sql)
-                .param("entityTypeName", entityTypeName)
-                .param("attributeName", attributeName)
-                .query(UUID.class)
+        UUID[] attributeArray = targetableAttributeIds.toArray(UUID[]::new);
+
+        Integer matchingCount = jdbcClient.sql(sql)
+                .param("nestedGroupId", nestedGroupId)
+                .param("attributeIds", attributeArray)
+                .query(Integer.class)
                 .single();
-    }
-    public void addNewEntityType(String name){
-        String sql = "INSERT INTO entity_type(name) VALUES ('name')";
-        jdbcClient.sql(sql);
 
+        // If the distinct count in DB matches the input list size, all attributes exist for this group
+        return matchingCount != null && matchingCount == targetableAttributeIds.stream().distinct().count();
     }
 
 
 
 
-    /**
-     * 1. Resolves or creates an action_id (e.g., "DELETE")
-     */
-    public UUID findOrCreateAction(String actionName) {
-        String selectSql = "SELECT id FROM public.action WHERE name = :name";
-        Optional<UUID> existing = jdbcClient.sql(selectSql)
-                .paramSource(new MapSqlParameterSource().addValue("name", actionName, Types.VARCHAR))
-                .query(UUID.class)
-                .optional();
+    public void assignPermissionToUserGroup(
+            UUID nestedGroupId,
+            UUID permissionId,
+            UUID targetableAttributeId,
+            Boolean isRequired,
+            String autoFillValue) {
 
-        if (existing.isPresent()) return existing.get();
-
-        UUID id = UUID.randomUUID();
-        jdbcClient.sql("INSERT INTO public.action (id, name) VALUES (:id, :name)")
-                .paramSource(new MapSqlParameterSource()
-                        .addValue("id", id, Types.OTHER)
-                        .addValue("name", actionName, Types.VARCHAR))
-                .update();
-        return id;
-    }
-
-    /**
-     * 2. Resolves or creates an entity_type_id (e.g., "user_logs")
-     */
-    public UUID findOrCreateEntityType(String entityName) {
-        String selectSql = "SELECT id FROM public.entity_type WHERE name = :name";
-        Optional<UUID> existing = jdbcClient.sql(selectSql)
-                .paramSource(new MapSqlParameterSource().addValue("name", entityName, Types.VARCHAR))
-                .query(UUID.class)
-                .optional();
-
-        if (existing.isPresent()) return existing.get();
-
-        UUID id = UUID.randomUUID();
-        jdbcClient.sql("INSERT INTO public.entity_type (id, name) VALUES (:id, :name)")
-                .paramSource(new MapSqlParameterSource()
-                        .addValue("id", id, Types.OTHER)
-                        .addValue("name", entityName, Types.VARCHAR))
-                .update();
-        return id;
-    }
-
-    /**
-     * 3. Resolves or creates a targetable_attribute_id for a given entity_type_id
-     */
-    public UUID findOrCreateTargetableAttribute(UUID entityTypeId, String attributeName) {
-        String selectSql = "SELECT id FROM public.targetable_attribute WHERE entity_type_id = :entityTypeId AND name = :name";
-        Optional<UUID> existing = jdbcClient.sql(selectSql)
-                .paramSource(new MapSqlParameterSource()
-                        .addValue("entityTypeId", entityTypeId, Types.OTHER)
-                        .addValue("name", attributeName, Types.VARCHAR))
-                .query(UUID.class)
-                .optional();
-
-        if (existing.isPresent()) return existing.get();
-
-        UUID id = UUID.randomUUID();
-        jdbcClient.sql("INSERT INTO public.targetable_attribute (id, entity_type_id, name) VALUES (:id, :entityTypeId, :name)")
-                .paramSource(new MapSqlParameterSource()
-                        .addValue("id", id, Types.OTHER)
-                        .addValue("entityTypeId", entityTypeId, Types.OTHER)
-                        .addValue("name", attributeName, Types.VARCHAR))
-                .update();
-        return id;
-    }
-
-    /**
-     * 4. Resolves or creates the permission record and links it to targetable_attribute
-     */
-    public UUID findOrCreatePermission(String permissionName, UUID actionId, UUID targetableAttributeId) {
-        String selectSql = "SELECT id FROM public.permission WHERE name = :name";
-        Optional<UUID> existing = jdbcClient.sql(selectSql)
-                .paramSource(new MapSqlParameterSource().addValue("name", permissionName, Types.VARCHAR))
-                .query(UUID.class)
-                .optional();
-
-        if (existing.isPresent()) return existing.get();
-
-        // Save permission
-        UUID permissionId = UUID.randomUUID();
-        jdbcClient.sql("INSERT INTO public.permission (id, name, action_id) VALUES (:id, :name, :actionId)")
-                .paramSource(new MapSqlParameterSource()
-                        .addValue("id", permissionId, Types.OTHER)
-                        .addValue("name", permissionName, Types.VARCHAR)
-                        .addValue("actionId", actionId, Types.OTHER))
-                .update();
-
-        // Link in permission_attribute
-        jdbcClient.sql("INSERT INTO public.permission_attribute (permission_id, targetable_attribute_id) VALUES (:permId, :attrId)")
-                .paramSource(new MapSqlParameterSource()
-                        .addValue("permId", permissionId, Types.OTHER)
-                        .addValue("attrId", targetableAttributeId, Types.OTHER))
-                .update();
-
-        return permissionId;
-    }
-
-    /**
-     * 5. Assigns permission to group_permission
-     */
-    public void assignPermissionToGroup(UUID ownerUsersGroupId, UUID permissionId, UUID targetUsersGroupId) {
         String sql = """
-            INSERT INTO public.group_permission (id, permission_id, owner_users_group, target_users_group)
-            VALUES (:id, :permissionId, :ownerGroup, :targetGroup)
-            """;
+            INSERT INTO permission_attribute (
+                nested_group_id, 
+                permission_id, 
+                targetable_attribute_id, 
+                is_required, 
+                auto_fill_value
+            )
+            VALUES (:nestedGroupId, :permissionId, :targetableAttributeId, :isRequired, :autoFillValue)
+        """;
 
         jdbcClient.sql(sql)
-                .paramSource(new MapSqlParameterSource()
-                        .addValue("id", UUID.randomUUID(), Types.OTHER)
-                        .addValue("permissionId", permissionId, Types.OTHER)
-                        .addValue("ownerGroup", ownerUsersGroupId, Types.OTHER)
-                        .addValue("targetGroup", targetUsersGroupId, Types.OTHER))
+                .param("nestedGroupId", nestedGroupId)
+                .param("permissionId", permissionId)
+                .param("targetableAttributeId", targetableAttributeId)
+                .param("isRequired", isRequired != null ? isRequired : false)
+                .param("autoFillValue", autoFillValue)
                 .update();
     }
     public List<String> findUserEntityAccess(UUID userId, UUID groupId) {

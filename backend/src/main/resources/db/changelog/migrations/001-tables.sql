@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS "permission" (
 
 CREATE TABLE IF NOT EXISTS "entity_type" (
                                              "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-                                             "name" VARCHAR(100) NOT NULL
+                                             "name" VARCHAR(100) NOT NULL UNIQUE
 );
 
 CREATE TABLE IF NOT EXISTS "targetable_attribute" (
@@ -123,14 +123,13 @@ CREATE TABLE IF NOT EXISTS "targetable_attribute" (
                                                       "name" VARCHAR(100) NOT NULL
 );
 
--- Refactored: Added nested_group_id for tenant-level permission customization
 CREATE TABLE IF NOT EXISTS "permission_attribute" (
+                                                      "id" UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                                                       "nested_group_id" UUID NOT NULL,
                                                       "permission_id" UUID NOT NULL,
-                                                      "targetable_attribute_id" UUID NOT NULL,
+                                                      "targetable_attribute_id" UUID,
                                                       "is_required" BOOLEAN DEFAULT FALSE,
-                                                      "auto_fill_value" VARCHAR(255),
-                                                      PRIMARY KEY ("nested_group_id", "permission_id", "targetable_attribute_id")
+                                                      "auto_fill_value" VARCHAR(255)
 );
 
 -- Refactored: Added nested_group_id to group_permission for direct lookup
@@ -211,6 +210,16 @@ CREATE INDEX idx_group_permission_lookup
 -- 3. Accelerates target attribute resolution: (nested_group_id -> permission)
 CREATE INDEX idx_permission_attribute_lookup
     ON "permission_attribute" ("nested_group_id", "permission_id");
+
+CREATE UNIQUE INDEX idx_permission_attribute_unique
+    ON "permission_attribute" ("nested_group_id", "permission_id", "targetable_attribute_id")
+    WHERE "targetable_attribute_id" IS NOT NULL;
+
+-- Enforce uniqueness for global permissions (where attribute is NULL) to prevent duplicate global assignments
+CREATE UNIQUE INDEX idx_permission_attribute_global_unique
+    ON "permission_attribute" ("nested_group_id", "permission_id")
+    WHERE "targetable_attribute_id" IS NULL;
+
 
 -- 4. Accelerates tenant log queries
 CREATE INDEX idx_api_log_tenant

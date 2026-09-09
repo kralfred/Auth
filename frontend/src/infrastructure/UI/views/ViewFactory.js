@@ -5,6 +5,7 @@ import { RegisterView } from './RegisterView.js'
 import { HomeView } from './HomeView.js'
 import { UserManagementView } from './UserManagementView.js';
 
+
 export class ViewFactory {
   constructor(authService, appState, userRepository) {
     this.authService = authService;
@@ -26,4 +27,5 @@ export class ViewFactory {
   getAdminUserView() {
   return new UserManagementView(this.appState, this.userRepository);
 }
+ 
 }

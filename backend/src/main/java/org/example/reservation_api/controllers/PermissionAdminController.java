@@ -1,8 +1,10 @@
 package org.example.reservation_api.controllers;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.example.reservation_api.DTO.ConfigureRuleRequest;
-import org.example.reservation_api.DTO.CreateAttributeRequest;
+import org.example.reservation_api.DTO.PermissionDTOs.*;
+import org.example.reservation_api.security.SecurityUtils;
 import org.example.reservation_api.services.PermissionAdminService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,12 +16,16 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/admin/permissions")
 @RequiredArgsConstructor
+@Slf4j
 public class PermissionAdminController {
 
     private final PermissionAdminService adminService;
 
     @PostMapping("/attributes/create")
     public ResponseEntity<Map<String, Object>> createAttribute(@RequestBody CreateAttributeRequest request) {
+
+        log.error("Failed to persist API log: {}");
+
         UUID attributeId = adminService.registerNewAttribute(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(

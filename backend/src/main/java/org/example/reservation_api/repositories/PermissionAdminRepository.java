@@ -16,10 +16,16 @@ public class PermissionAdminRepository {
 
     public UUID createAttribute(String entityTypeName, String attributeName) {
         String sql = """
+        WITH target_entity AS (
+            INSERT INTO entity_type (id, name)
+            VALUES (gen_random_uuid(), :entityTypeName)
+            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+            RETURNING id
+        )
         INSERT INTO targetable_attribute (id, entity_type_id, name)
         VALUES (
             gen_random_uuid(),
-            (SELECT id FROM entity_type WHERE name = :entityTypeName),
+            (SELECT id FROM target_entity),
             :attributeName
         )
         ON CONFLICT (entity_type_id, name) DO UPDATE SET name = EXCLUDED.name

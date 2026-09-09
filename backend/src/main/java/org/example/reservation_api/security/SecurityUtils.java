@@ -24,9 +24,20 @@ public final class SecurityUtils {
 
     public static UUID getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated()) {
+            throw new IllegalStateException("No authenticated user ID found in security context");
+        }
 
-        if (auth != null && auth.getPrincipal() instanceof UserPrincipal principal) {
-            return principal.id();
+        Object principal = auth.getPrincipal();
+
+        if (principal instanceof UUID uuid) {
+            return uuid;
+        } else if (principal instanceof String strId) {
+            try {
+                return UUID.fromString(strId);
+            } catch (IllegalArgumentException e) {
+                throw new IllegalStateException("Principal string is not a valid UUID: " + strId);
+            }
         }
 
         throw new IllegalStateException("No authenticated user ID found in security context");

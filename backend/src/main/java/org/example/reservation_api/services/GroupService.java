@@ -24,23 +24,6 @@ public class GroupService {
     private final PermissionCheckRepository permissionCheckRepository;
 
     @Transactional
-    public UUID createNewNestedGroup(String name, UUID parentGroup, UUID ownerId, List<UUID> groupMembers){
-
-        UUID newNestedGroupId = UUID.randomUUID();
-        UUID userGroupId = UUID.randomUUID();
-        UserGroup nestedGroupMembers = new UserGroup(userGroupId, newNestedGroupId, "Nested Group Members");
-        if(!groupMembers.contains(ownerId)){
-            groupMembers.add(ownerId);
-        }
-
-        groupRepository.addUsersToGroup(groupMembers, userGroupId);
-
-        NestedGroup newGroup = new NestedGroup(newNestedGroupId, name, parentGroup, ownerId);
-        genericRepository.save("nested_group", newGroup);
-        genericRepository.save("user_group", nestedGroupMembers);
-       return newNestedGroupId;
-    }
-    @Transactional
     public UUID createNestedGroup(String groupName, UUID parentGroupId, UUID owner, List<UUID> initialMemberIds) {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
 
@@ -82,13 +65,13 @@ public class GroupService {
         groupRepository.createUserGroup(newGroupId, nestedGroupId, groupName);
 
         if(initialMemberIds != null){
-            addUserToUserGroup(initialMemberIds, newGroupId);
+            addUserToUsersGroup(initialMemberIds, newGroupId);
         }
     }
 
 
     @Transactional
-    public void addUserToUserGroup(List<UUID> targetUserId, UUID targetGroupId) {
+    public void addUserToUsersGroup(List<UUID> targetUserId, UUID targetGroupId) {
         UUID currentUserId = SecurityUtils.getCurrentUserId();
 
         // Validate admin rights over the target group

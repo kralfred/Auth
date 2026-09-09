@@ -10,7 +10,7 @@ public class PermissionCheckRepository {
 
     private final JdbcClient jdbcClient;
 
-    public static final UUID ROOT_SYSTEM_GROUP_ID = UUID.fromString("00000000-0000-0000-0000-000000000000");
+    public static final UUID ROOT_SYSTEM_GROUP_ID = UUID.fromString("00000000-0000-0000-0000-000000000001");
     public PermissionCheckRepository(JdbcClient jdbcClient) {
         this.jdbcClient = jdbcClient;
     }
