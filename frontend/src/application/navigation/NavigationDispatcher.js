@@ -18,13 +18,13 @@ export class NavigationDispatcher {
     this.router = router;
   }
 
-  // NavigationDispatcher.js
+
 handleStateChange() {
     const isAuth = this.appState.isAuthenticated();
     const currentHash = window.location.hash || "#/home";
     const currentPath = currentHash.replace("#", "");
 
-    // Guard: If we are already on the login page and NOT authenticated, stop.
+
     if (!isAuth && currentPath === "/login") {
         return; 
     }
@@ -54,10 +54,9 @@ handleStateChange() {
     const context = this.appState.getContext();
     if (context === 'LOADING') return;
 
-    // 1. Convert string to route object if necessary
+
     let route = routeOrPath;
     if (typeof routeOrPath === 'string') {
-      // Ask the router to find the object { path, protected, createView }
       route = this.router.findRoute(routeOrPath);
     }
 
@@ -68,22 +67,22 @@ handleStateChange() {
 
     const isAuth = this.appState.isAuthenticated();
 
-    // 2. Now 'route' is an object, so these checks work
+
     if (route.protected && !isAuth) {
       this.authService.handleUnauthorizedAccess(window.location.hash);
       return;
     }
-
-    // 3. This now works because route is the object from routes.js
+   
     const view = route.createView(); 
     this.render(view);
   }
 
   render(view) {
-    if (!view || typeof view.render !== 'function') {
-      console.error("Dispatcher Error: View is invalid or missing a render method", view);
-      return;
-    }
+    console.log("Dispatcher rendering view:", view);
+  if (!view || typeof view.render !== 'function') {
+    console.error("Dispatcher Error: Invalid view", view);
+    return;
+  }
 
     this.container.innerHTML = ""; 
 
@@ -95,6 +94,7 @@ handleStateChange() {
 
 
     const pageElement = view.render();
-    this.container.appendChild(pageElement);
+  console.log("Page element generated:", pageElement);
+  this.container.appendChild(pageElement);
   }
 }

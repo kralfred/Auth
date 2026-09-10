@@ -1,5 +1,7 @@
 package org.example.reservation_api.controllers;
 
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,12 +11,16 @@ import org.example.reservation_api.security.MyCustomBouncer;
 import org.example.reservation_api.services.JwtService;
 import org.example.reservation_api.services.UserService;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 
 import java.net.UnknownHostException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -57,13 +63,73 @@ public class AuthController {
     }
 
     @PostMapping("/validate")
-    public ResponseEntity<String> validateToken(@RequestHeader("Authorization") String authHeader) {
+    public ResponseEntity<?> validateToken(@RequestHeader(value = "Authorization", required = false) String authHeader) {
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return ResponseEntity.badRequest().build();
+            return ResponseEntity.badRequest().body("Missing or invalid 'Authorization: Bearer <token>' header");
         }
+
+        String token = authHeader.substring(7).trim();
+
+        if (token.isEmpty()) {
+            return ResponseEntity.badRequest().body("Token string is empty");
+        }
+
+        try {
+            TokenValidationResult validationResult = bouncer.checkToken(token);
+
+            if (validationResult.status() != TokenValidationResult.ValidationStatus.VALID) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Token validation failed: " + validationResult.status());
+            }
+
+            AuthResponse response = mapToAuthResponse(token, validationResult);
+            return ResponseEntity.ok(response);
+
+        } catch (MalformedJwtException e) {
+            return ResponseEntity.badRequest().body("Malformed JWT token format");
+        } catch (ExpiredJwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Token has expired");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid or untrusted token");
+        }
+    }
+
+    private AuthResponse mapToAuthResponse(String token, TokenValidationResult result) {
+        String email = result.claims() != null ? result.claims().get("email", String.class) : null;
+
+
+        long expiresIn = 0;
+        if (result.claims() != null && result.claims().getExpiration() != null) {
+            Instant expiresAt = result.claims().getExpiration().toInstant();
+            expiresIn = Math.max(0, Duration.between(Instant.now(), expiresAt).getSeconds());
+        }
+
+        UserDto user = new UserDto(
+                result.userId(),
+                result.username(),
+                email,
+                result.permissions() != null ? result.permissions() : List.of()
+        );
+
+        return new AuthResponse(
+                user,
+                token,
+                "Bearer",
+                expiresIn,
+                null // No refresh token on validation
+        );
+    }
+
+    @PostMapping("/refresh")
+    public ResponseEntity<?> refreshToken(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            return ResponseEntity.badRequest().body("Missing or invalid 'Authorization: Bearer <token>' header");
+        }
+
         System.out.println("Generated header: " + authHeader);
         String token = authHeader.substring(7);
-        bouncer.checkToken(token);
-        return ResponseEntity.ok("Generated token without header: ");
+        bouncer.checkToken(token); // Executes checkToken, throwing an exception if invalid[cite: 3]
+
+        return ResponseEntity.ok("Token is valid");
     }
 }

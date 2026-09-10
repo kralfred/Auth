@@ -101,14 +101,27 @@ public class JwtService {
             String userIdStr = claims.get("userId", String.class);
             UUID userId = userIdStr != null ? UUID.fromString(userIdStr) : null;
 
-            return new TokenValidationResult(tokenId, userId, claims, TokenValidationResult.ValidationStatus.VALID);
+// 1. Get the raw List claim
+            Object rawPermissions = claims.get("permissions");
+
+            List<String> permissions = new ArrayList<>();
+            if (rawPermissions instanceof List<?> list) {
+                for (Object item : list) {
+                    if (item instanceof String s) {
+                        permissions.add(s);
+                    }
+                }
+            }
+
+
+            return new TokenValidationResult(tokenId, userId, claims.getSubject(), permissions, claims, TokenValidationResult.ValidationStatus.VALID);
 
         } catch (ExpiredJwtException e) {
-            return new TokenValidationResult(null, null, null, TokenValidationResult.ValidationStatus.EXPIRED);
+            return new TokenValidationResult(null, null, null,null,null, TokenValidationResult.ValidationStatus.EXPIRED);
         } catch (Exception e) {
             System.err.println("VALIDATION FAILED EXCEPTION: " + e.getMessage());
             e.printStackTrace();
-            return new TokenValidationResult(null, null, null, TokenValidationResult.ValidationStatus.INVALID);
+            return new TokenValidationResult(null, null, null,null,null, TokenValidationResult.ValidationStatus.INVALID);
         }
     }
 

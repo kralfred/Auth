@@ -41,8 +41,8 @@ public class MyCustomBouncer {
     }
 
     @Transactional
-    public void checkToken(String token){
-        jwtService.validateToken(token);
+    public TokenValidationResult checkToken(String token){
+       return jwtService.validateToken(token);
     }
 
     @Transactional
@@ -92,6 +92,7 @@ public class MyCustomBouncer {
                 accessToken,
                 expiration,
                 sessionResult.rawRefreshToken(),
+                5 * 60 * 1000,
                 credentials.userId(),
                 credentials.username(),
                 pageAccess

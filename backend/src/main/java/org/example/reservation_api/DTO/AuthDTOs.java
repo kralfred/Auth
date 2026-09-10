@@ -20,12 +20,13 @@ public sealed interface AuthDTOs {
             String tokenType,
             long expiresIn,
             String refreshToken,
+            long refreshTokenExpiration,
             UUID userId,
             String username,
             List<String> permissions
     ) implements AuthDTOs {
-        public LoginResponse(String accessToken, long expiresIn, String refreshToken, UUID userId, String username, List<String> permissions) {
-            this(accessToken, "Bearer", expiresIn, refreshToken, userId, username, permissions);
+        public LoginResponse(String accessToken, long expiresIn, String refreshToken,long refreshTokenExpiration, UUID userId, String username, List<String> permissions) {
+            this(accessToken, "Bearer", expiresIn, refreshToken,refreshTokenExpiration, userId, username, permissions);
         }
     }
     record RegistrationRequest(
@@ -39,9 +40,32 @@ public sealed interface AuthDTOs {
             UUID userId,
             UUID defaultNestedGroupId
     ) implements AuthDTOs {}
+
+    record AuthResponse(
+            UserDto user,
+            String accessToken,
+            String tokenType,
+            long expiresIn,
+            String refreshToken
+    ) implements AuthDTOs {
+
+
+        public AuthResponse(UserDto user, String accessToken, String tokenType, long expiresIn) {
+            this(user, accessToken, tokenType, expiresIn, null);
+        }
+    }
+        record UserDto(
+                UUID id,
+                String username,
+                String email,
+                List<String> permissions
+        ) implements AuthDTOs {}
+
     record TokenValidationResult(
             UUID tokenId,
             UUID userId,
+            String username,
+            List<String> permissions,
             Claims claims,
             ValidationStatus status
     ) implements AuthDTOs {
