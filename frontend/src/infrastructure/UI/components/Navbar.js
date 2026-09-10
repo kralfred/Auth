@@ -1,5 +1,4 @@
-// infrastructure/ui/components/Navbar.js
-// infrastructure/ui/components/Navbar.js
+// infrastructure/UI/components/Navbar.js
 export class Navbar {
   constructor(authService, appState, navigationDispatcher) {
     this.authService = authService;
@@ -31,35 +30,35 @@ export class Navbar {
     actions.style.alignItems = "center";
 
     if (user) {
-      if (user.role === 'ROLE_ADMIN' || user.permissions.includes('view_users')) {
-        const adminLink = document.createElement("a");
-        adminLink.textContent = "Admin Panel";
-        adminLink.href = "#";
-        adminLink.style.marginRight = "20px";
-        adminLink.style.color = "#ecf0f1";
-        adminLink.onclick = (e) => {
-          e.preventDefault();
-          this.navigationDispatcher.dispatch("/admin/view/users");
-        };
-        actions.appendChild(adminLink);
-      }
-      if (user.role === 'ROLE_ADMIN' || user.permissions.includes('view_logs')) {
-    const logsLink = document.createElement("a");
-    logsLink.textContent = "Logs";
-    logsLink.href = "#";
-    logsLink.style.marginRight = "20px";
-    logsLink.style.color = "#ecf0f1";
-    logsLink.onclick = (e) => {
-      e.preventDefault();
-      this.navigationDispatcher.dispatch("/admin/view/logs");
-    };
-    actions.appendChild(logsLink);
-  }
+      const userPermissions = user.permissions || [];
+
+      // Map permission keys to link names and route paths
+      const permissionRoutes = [
+        { permission: "view_users", label: "Admin Panel", path: "/admin/view/users" },
+        { permission: "string", label: "Logs", path: "/admin/view/logs" },
+        { permission: "MANAGE_SYSTEM_PERMISSIONS", label: "Permissions", path: "/admin/permissions" },
+        { permission: "view_permissions", label: "Permissions", path: "/admin/permissions" }
+      ];
+
+      // Render links for permissions present in user's permissions array
+      permissionRoutes.forEach(item => {
+        if (userPermissions.includes(item.permission)) {
+          const navLink = document.createElement("a");
+          navLink.textContent = item.label;
+          navLink.href = "#";
+          navLink.style.marginRight = "20px";
+          navLink.style.color = "#ecf0f1";
+          navLink.onclick = (e) => {
+            e.preventDefault();
+            this.navigationDispatcher.dispatch(item.path);
+          };
+          actions.appendChild(navLink);
+        }
+      });
 
       const userInfo = document.createElement("span");
-
       userInfo.innerHTML = `
-        <small style="display:block; font-size: 0.7em; color: #bdc3c7;">${user.role}</small>
+        <small style="display:block; font-size: 0.7em; color: #bdc3c7;">${user.role || 'User'}</small>
         ${user.username}
       `;
       userInfo.style.marginRight = "15px";

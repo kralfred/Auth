@@ -41,24 +41,31 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- 1. Drop the old function signature
+DROP FUNCTION IF EXISTS fn_get_entity_access(uuid, uuid);
+
+-- 2. Create the updated function with p_nested_group_id
 CREATE OR REPLACE FUNCTION fn_get_entity_access(
     p_user_id UUID,
-    p_group_id UUID
+    p_nested_group_id UUID
 )
     RETURNS TABLE (entity_type VARCHAR)
-    STABLE -- Tell Postgres this function only reads data
-    LANGUAGE plpgsql AS $$
-BEGIN
-    RETURN QUERY
-        SELECT DISTINCT e.name
-        FROM "group_member" gm
-                 JOIN "group_permission" gp ON gm.group_id = gp.owner_users_group
-                 JOIN "permission" p ON gp.permission_id = p.id
-                 JOIN "targetable_attribute" ta ON p.id = ta.id
-                 JOIN "entity_type" e ON ta.entity_type_id = e.id
-        WHERE gm.user_id = p_user_id
-          AND gm.group_id = p_group_id;
-END;
+    STABLE
+    LANGUAGE sql AS $$
+SELECT DISTINCT e.name AS entity_type
+FROM "group_member" gm
+         JOIN "group_permission" gp
+              ON gm.group_id = gp.owner_users_group
+                  AND gm.nested_group_id = gp.nested_group_id
+         JOIN "permission_attribute" pa
+              ON gp.permission_id = pa.permission_id
+                  AND gp.nested_group_id = pa.nested_group_id
+         JOIN "targetable_attribute" ta
+              ON pa.targetable_attribute_id = ta.id
+         JOIN "entity_type" e
+              ON ta.entity_type_id = e.id
+WHERE gm.user_id = p_user_id
+  AND gm.nested_group_id = p_nested_group_id;
 $$;
 
 

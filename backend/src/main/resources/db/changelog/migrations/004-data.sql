@@ -116,5 +116,53 @@ VALUES (
        )
 ON CONFLICT DO NOTHING;
 
-ALTER TABLE entity_type
-    ADD CONSTRAINT uq_entity_type_name UNIQUE (name);
+SELECT * FROM fn_get_entity_access(
+        '68e571d5-3b66-41eb-a4ef-5db6992827b7'::uuid, -- p_user_id
+        '00000000-0000-0000-0000-000000000001'::uuid  -- p_nested_group_id
+              );
+
+SELECT gp.permission_id, gp.owner_users_group, gp.nested_group_id
+FROM "group_member" gm
+         JOIN "group_permission" gp
+              ON gm.group_id = gp.owner_users_group
+                  AND gm.nested_group_id = gp.nested_group_id
+WHERE gm.user_id = '68e571d5-3b66-41eb-a4ef-5db6992827b7'::uuid
+  AND gm.nested_group_id = '00000000-0000-0000-0000-000000000001'::uuid;
+
+
+SELECT
+    gm.user_id,
+    gm.group_id,
+    gm.nested_group_id AS gm_tenant,
+    gp.id AS group_perm_id,
+    gp.permission_id AS gp_perm_id,
+    pa.id AS perm_attr_id,
+    pa.targetable_attribute_id AS pa_target_attr,
+    ta.id AS target_attr_id,
+    ta.entity_type_id,
+    e.name AS entity_name
+FROM "group_member" gm
+         LEFT JOIN "group_permission" gp
+                   ON gm.group_id = gp.owner_users_group
+                       AND gm.nested_group_id = gp.nested_group_id
+         LEFT JOIN "permission_attribute" pa
+                   ON gp.permission_id = pa.permission_id
+                       AND gp.nested_group_id = pa.nested_group_id
+         LEFT JOIN "targetable_attribute" ta
+                   ON pa.targetable_attribute_id = ta.id
+         LEFT JOIN "entity_type" e
+                   ON ta.entity_type_id = e.id
+WHERE gm.user_id = '68e571d5-3b66-41eb-a4ef-5db6992827b7'::uuid
+  AND gm.nested_group_id = '00000000-0000-0000-0000-000000000001'::uuid;
+
+INSERT INTO "group_permission" (
+    "nested_group_id",
+    "permission_id",
+    "owner_users_group"
+) VALUES (
+             '00000000-0000-0000-0000-000000000001'::uuid,
+             '10000000-0000-0000-0000-000000000001'::uuid,
+             '40000000-0000-0000-0000-000000000001'::uuid
+
+         );
+

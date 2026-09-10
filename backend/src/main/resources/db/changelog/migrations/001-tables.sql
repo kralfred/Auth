@@ -138,7 +138,7 @@ CREATE TABLE IF NOT EXISTS "group_permission" (
                                                   "nested_group_id" UUID NOT NULL,
                                                   "permission_id" UUID NOT NULL,
                                                   "owner_users_group" UUID NOT NULL,
-                                                  "target_users_group" UUID NOT NULL
+                                                  "target_users_group" UUID
 );
 
 -- Logging (Added nested_group_id for tenant log isolation)
