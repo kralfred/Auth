@@ -57,7 +57,6 @@ public sealed interface AuthDTOs {
         record UserDto(
                 UUID id,
                 String username,
-                String email,
                 List<String> permissions
         ) implements AuthDTOs {}
 

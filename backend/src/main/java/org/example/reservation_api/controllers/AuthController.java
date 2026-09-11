@@ -107,7 +107,6 @@ public class AuthController {
         UserDto user = new UserDto(
                 result.userId(),
                 result.username(),
-                email,
                 result.permissions() != null ? result.permissions() : List.of()
         );
 
@@ -116,7 +115,7 @@ public class AuthController {
                 token,
                 "Bearer",
                 expiresIn,
-                null // No refresh token on validation
+                null
         );
     }
 

@@ -34,6 +34,11 @@ export const getRoutes = (viewFactory) => ([
     path: "/logs",
     protected: true,
     createView: () => viewFactory.getLogsView()
-  }
+  },
+  { 
+      path: "/admin/permissions", 
+      protected: true, 
+      createView: () => viewFactory.getPermissionView() 
+    }
   
 ]);

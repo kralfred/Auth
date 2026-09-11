@@ -1,4 +1,3 @@
-// main.js
 
 import { CONFIG } from './config.js';
 import { ApiUserRepository } from './infrastructure/API/ApiUserRepository.js'

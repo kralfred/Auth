@@ -34,8 +34,8 @@ export class TokenService {
       try {
         const resp = await this.apiRepository.validateToken(accessToken.value);
         if (resp && resp.user) {
-          console.warn("Access token validated successfully");
-          await this.applyTokensAndState(resp.user, accessToken, refreshToken);
+          console.warn("Access token validated successfully" + resp);
+          this.appState.setUser(resp.user);
           return true;
         }
       } catch (e) {

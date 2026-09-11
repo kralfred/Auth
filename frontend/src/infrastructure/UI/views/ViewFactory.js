@@ -1,10 +1,9 @@
-
+import { PermissionView } from './PermissionView.js';
 import { LoginView } from './LoginView.js'
 import { RegisterView } from './RegisterView.js'
 import { HomeView } from './HomeView.js'
 import { UserManagementView } from './UserManagementView.js';
 import { LogsView } from './LogsView.js'
-import { PermissionView } from './PermissionView.js'
 
 export class ViewFactory {
   constructor(authService, appState, userRepository, apiService, entityService) {
@@ -35,5 +34,9 @@ export class ViewFactory {
   getPermissionView(){
     return new PermissionView(this.entityService);
   }
- 
+  getPermissionView() {
+    return new PermissionView(this.entityService);
+  }
+
+
 }

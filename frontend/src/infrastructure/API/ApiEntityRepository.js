@@ -6,6 +6,16 @@ export class ApiEntityRepository extends BaseApiRepository {
     super(baseUrl);
   }
 
+  async createPermissionAttribute(attributeName, entityTypeName) {
+    return await this.request("/api/admin/permissions/attributes/create", {
+      method: "POST",
+      body: JSON.stringify({
+        attributeName,
+        entityTypeName
+      })
+    });
+  }
+
   /**
    * Fetches a collection of entities
    * @param {string} endpoint - The resource path (e.g., "logs", "permissions")

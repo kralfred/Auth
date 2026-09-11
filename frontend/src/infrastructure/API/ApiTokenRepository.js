@@ -19,9 +19,9 @@ export class ApiTokenRepository extends BaseApiRepository {
 
     return {
       user: new User({
-        id: data.userId,
-        username: data.username,
-        permissions: data.permissions
+        id: data.user.userId,
+        username: data.user.username,
+        permissions: data.user.permissions
       })
     };
   }

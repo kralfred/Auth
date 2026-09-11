@@ -35,7 +35,7 @@ export class Navbar {
       // Map permission keys to link names and route paths
       const permissionRoutes = [
         { permission: "view_users", label: "Admin Panel", path: "/admin/view/users" },
-        { permission: "string", label: "Logs", path: "/admin/view/logs" },
+        { permission: "string", label: "Permissions", path: "/admin/permissions" },
         { permission: "MANAGE_SYSTEM_PERMISSIONS", label: "Permissions", path: "/admin/permissions" },
         { permission: "view_permissions", label: "Permissions", path: "/admin/permissions" }
       ];

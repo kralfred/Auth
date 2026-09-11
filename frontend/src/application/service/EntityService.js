@@ -17,6 +17,10 @@ export class EntityService {
     return await this.entityRepository.getAll(key);
   }
 
+  async createPermissionAttribute(attributeName, entityTypeName) {
+    return await this.entityRepository.createPermissionAttribute(attributeName, entityTypeName);
+  }
+
   async getEntityById(entityType, id) {
     const key = entityType.toLowerCase();
 
