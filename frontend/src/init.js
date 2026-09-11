@@ -13,7 +13,8 @@ import { AuthService } from './application/service/AuthService.js';
 import { TokenService } from './application/service/TokenService.js';
 import { ApiAuthRepository } from './infrastructure/API/ApiAuthRepository.js';
 import { ApiTokenRepository } from './infrastructure/API/ApiTokenRepository.js';
-
+import { EntityService } from './application/service/EntityService.js';
+import { ApiEntityRepository } from './infrastructure/API/ApiEntityRepository.js'
 
 
 const isDevelopment = false;
@@ -21,6 +22,8 @@ const isDevelopment = false;
 const apiAuthRepo = new ApiAuthRepository(CONFIG.BACKEND_URL);
 const apiTokenRepo = new ApiTokenRepository(CONFIG.BACKEND_URL);
 const apiUserRepo = new ApiUserRepository(CONFIG.BACKEND_URL);
+const apiEntityRepo = new ApiEntityRepository(CONFIG.BACKEND_URL);
+
 
 const tokenRepo = new CookieTokenRepository();
 const userRepo = isDevelopment 
@@ -32,8 +35,13 @@ const appState = new App();
 // Services setup
 const tokenService = new TokenService(apiTokenRepo, tokenRepo, appState);
 const authService = new AuthService(apiAuthRepo, tokenService, appState);
+const entityService = new EntityService({
+  userRepository: apiUserRepo,
+  entityRepository: apiEntityRepo
+});
 
-const viewFactory = new ViewFactory(authService, appState, userRepo);
+
+const viewFactory = new ViewFactory(authService, appState, userRepo, entityService);
 const appRoutes = getRoutes(viewFactory);
 
 const container = document.getElementById("app");

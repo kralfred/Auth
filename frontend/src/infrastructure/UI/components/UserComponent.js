@@ -10,7 +10,6 @@ import { UniversalForm } from './global/UniversalForm.js';
 
 export class UserComponent {
     constructor(userData, userRepo) {
-        // Load styles for the user card and modals
         StyleLoader.load('src/infrastructure/UI/styles/UserComponent.css');
         StyleLoader.load('src/infrastructure/UI/styles/UserSettingsModal.css');
 

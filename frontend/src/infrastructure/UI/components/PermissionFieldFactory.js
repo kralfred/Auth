@@ -8,7 +8,6 @@ export const PermissionFields = {
             <span>${label}</span>
         </div>`,
 
-    // A text input for permissions that need a string (like a specific email or department)
     TEXT: (name, value, label) => `
         <div class="perm-field">
             <label>${label}</label>
