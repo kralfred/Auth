@@ -8,6 +8,8 @@ import org.example.reservation_api.security.SecurityUtils;
 import org.example.reservation_api.services.PermissionAdminService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
@@ -40,4 +42,5 @@ public class PermissionAdminController {
 
         return ResponseEntity.ok(Map.of("message", "Permission attribute rule updated successfully"));
     }
+
 }

@@ -95,7 +95,6 @@ public class AuthController {
     }
 
     private AuthResponse mapToAuthResponse(String token, TokenValidationResult result) {
-        String email = result.claims() != null ? result.claims().get("email", String.class) : null;
 
 
         long expiresIn = 0;

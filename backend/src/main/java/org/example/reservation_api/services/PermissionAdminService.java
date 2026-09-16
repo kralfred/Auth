@@ -29,7 +29,6 @@ public class PermissionAdminService {
 
         log.error("Failed to persist API log: {}" + currentUserId);
         System.out.println("DEBUG Active User ID: " + currentUserId);
-        // Verify user is in the Root/Main group with permission to create global attributes
         boolean isSystemAdmin = permissionCheckRepository.hasSystemPermission(
                 currentUserId,
                 "MANAGE_SYSTEM_PERMISSIONS"

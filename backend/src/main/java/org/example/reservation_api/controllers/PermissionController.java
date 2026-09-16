@@ -25,6 +25,7 @@ public class PermissionController {
     }
 
     @PostMapping
+    @RequestMapping("/create")
     @PreAuthorize("@myCustomBouncer.can(#currentUserId, #targetNestedGroupId, 'CREATE:permission:*')")
     public ResponseEntity<Void> createPermission(
             @AuthenticationPrincipal UUID currentUserId,
@@ -43,4 +44,6 @@ public class PermissionController {
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
+
+
 }

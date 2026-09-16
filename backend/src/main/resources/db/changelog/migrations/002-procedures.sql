@@ -36,13 +36,12 @@ BEGIN
     INSERT INTO "user_info" ("user_id", "email", "name", "password")
     VALUES (v_user_id, p_email, p_name, p_password);
 
-    -- 3. Return the newly created user ID
     RETURN v_user_id;
 END;
 $$ LANGUAGE plpgsql;
 
--- 1. Drop the old function signature
-DROP FUNCTION IF EXISTS fn_get_entity_access(uuid, uuid);
+
+
 
 -- 2. Create the updated function with p_nested_group_id
 CREATE OR REPLACE FUNCTION fn_get_entity_access(
