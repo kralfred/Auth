@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.reservation_api.DTO.ConfigureRuleRequest;
 import org.example.reservation_api.DTO.PermissionDTOs.*;
+import org.example.reservation_api.entities.EntityType;
 import org.example.reservation_api.messages.AccessDeniedException;
 import org.example.reservation_api.repositories.PermissionAdminRepository;
 import org.example.reservation_api.repositories.PermissionCheckRepository;
@@ -12,6 +13,7 @@ import org.example.reservation_api.security.SecurityUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -22,6 +24,11 @@ public class PermissionAdminService {
     private final PermissionAdminRepository adminRepository;
     private final PermissionCheckRepository permissionCheckRepository;
 
+
+    @Transactional
+    public List<EntityType> getAllEntities(){
+       return adminRepository.listAllEntities();
+    }
 
     @Transactional
     public UUID registerNewAttribute(CreateAttributeRequest request) {

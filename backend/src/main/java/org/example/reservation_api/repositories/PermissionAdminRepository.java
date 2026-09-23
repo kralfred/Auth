@@ -1,8 +1,10 @@
 package org.example.reservation_api.repositories;
 
+import org.example.reservation_api.entities.EntityType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -37,6 +39,14 @@ public class PermissionAdminRepository {
                 .param("attributeName", attributeName)
                 .query(UUID.class)
                 .single();
+    }
+
+    public List<EntityType> listAllEntities(){
+        String sql = "SELECT * FROM entity_type";
+
+
+        return jdbcClient.sql(sql)
+                .query(EntityType.class).list();
     }
 
 

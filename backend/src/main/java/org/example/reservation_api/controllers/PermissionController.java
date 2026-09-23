@@ -24,8 +24,7 @@ public class PermissionController {
         this.permissionService = permissionService;
     }
 
-    @PostMapping
-    @RequestMapping("/create")
+    @PostMapping("/create")
     @PreAuthorize("@myCustomBouncer.can(#currentUserId, #targetNestedGroupId, 'CREATE:permission:*')")
     public ResponseEntity<Void> createPermission(
             @AuthenticationPrincipal UUID currentUserId,
@@ -34,7 +33,7 @@ public class PermissionController {
             @Valid @RequestBody CreatePermissionRequest request
     ) {
 
-        // Controller Filter: Validate query param matches body context
+
         if (!targetNestedGroupId.equals(request.nestedGroupId())) {
             throw new IllegalArgumentException("Query parameter targetNestedGroupId does not match payload nestedGroupId.");
         }
