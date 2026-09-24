@@ -1,9 +1,20 @@
 // application/services/TokenService.js
 export class TokenService {
-  constructor(apiRepository, tokenRepository, appState) {
+  constructor(apiRepository, tokenRepository, appState, repositories = []) {
     this.apiRepository = apiRepository;
     this.tokenRepository = tokenRepository;
     this.appState = appState;
+    // Keep a list of all API repositories needing token synchronization
+    this.repositories = Array.isArray(repositories) ? repositories : [apiRepository];
+  }
+
+  // Helper to set token across all registered API repositories
+  _setTokenOnAllRepos(tokenString) {
+    this.repositories.forEach(repo => {
+      if (repo && typeof repo.setToken === 'function') {
+        repo.setToken(tokenString);
+      }
+    });
   }
 
   async applyTokensAndState(userObject, accessToken, refreshToken) {
@@ -12,7 +23,10 @@ export class TokenService {
 
     if (accessToken) {
       const tokenString = typeof accessToken === 'object' ? accessToken.value : accessToken;
-      this.apiRepository.setToken(tokenString);
+      
+      // Update token on ALL repositories
+      this._setTokenOnAllRepos(tokenString);
+      
       await this.tokenRepository.saveAccessToken(accessToken);
       
       if (refreshToken) {
@@ -20,22 +34,22 @@ export class TokenService {
       }
     } else {
       await this.tokenRepository.clearToken();
-      this.apiRepository.setToken(null);
+      this._setTokenOnAllRepos(null);
     }
   }
 
   async trySilentRefresh() {
-    // 1. Await stored tokens from storage
     const accessToken = await this.tokenRepository.getSavedAccessToken();
     const refreshToken = await this.tokenRepository.getSavedRefreshToken();
 
-    // 2. Validate Access Token
+    // 1. Validate Access Token
     if (accessToken?.value) {
       try {
         const resp = await this.apiRepository.validateToken(accessToken.value);
         if (resp && resp.user) {
-          console.warn("Access token validated successfully" + resp);
-          this.appState.setUser(resp.user);
+          console.warn("Access token validated successfully:", resp);
+          // Set user AND propagate current access token to all repos
+          await this.applyTokensAndState(resp.user, accessToken, refreshToken);
           return true;
         }
       } catch (e) {
@@ -43,7 +57,7 @@ export class TokenService {
       }
     }
 
-    // 3. Fallback to Refresh Token
+    // 2. Fallback to Refresh Token
     if (refreshToken?.value) {
       try {
         const resp = await this.apiRepository.refreshToken(refreshToken.value);
@@ -57,10 +71,8 @@ export class TokenService {
       }
     }
 
-    // 4. Clear state if all checks fail
-    this.appState.setUser(null);
-    await this.tokenRepository.clearToken();
-    this.apiRepository.setToken(null);
+    // 3. Clear state if all checks fail
+    await this.applyTokensAndState(null, null, null);
     return false;
   }
 }

@@ -26,6 +26,8 @@ const apiUserRepo = new ApiUserRepository(CONFIG.BACKEND_URL);
 const apiEntityRepo = new ApiEntityRepository(CONFIG.BACKEND_URL);
 const apiAdminRepo = new ApiAdminRepository(CONFIG.BACKEND_URL)
 
+const apiRepos = [apiAuthRepo, apiTokenRepo, apiUserRepo, apiEntityRepo, apiAdminRepo];
+
 const tokenRepo = new CookieTokenRepository();
 const userRepo = isDevelopment 
   ? new MockApiUserRepository() 
@@ -33,8 +35,7 @@ const userRepo = isDevelopment
 
 const appState = new App();
 
-// Services setup
-const tokenService = new TokenService(apiTokenRepo, tokenRepo, appState);
+const tokenService = new TokenService(apiTokenRepo, tokenRepo, appState, apiRepos);
 const authService = new AuthService(apiAuthRepo, tokenService, appState);
 const entityService = new EntityService({
   userRepository: apiUserRepo,

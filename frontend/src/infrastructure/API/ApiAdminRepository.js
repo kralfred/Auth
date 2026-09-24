@@ -5,9 +5,9 @@ export class ApiAdminRepository extends BaseApiRepository {
     super(baseUrl);
   }
 
-  async getAllEntities(){
+async getAllEntities() {
     console.error("Repository firing:");
-       return await this.request(`/api/admin/permissions/view/entities/all`, {
+    return await this.request(`/api/admin/permissions/view/entities/all`, {
       method: "GET"
     });
   }

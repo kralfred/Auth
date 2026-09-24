@@ -46,7 +46,11 @@ public class PermissionAdminController {
     }
 
     @GetMapping("/view/entities/all")
-    public ResponseEntity<List<EntityType>> listAllEntities(){
+    public ResponseEntity<List<EntityType>> listAllEntities(
+            @AuthenticationPrincipal UUID currentUserId
+    ) {
+        // currentUserId will automatically be populated from the JWT / SecurityContext
+        log.info("Fetching entities for user: {}", currentUserId);
         return ResponseEntity.ok(adminService.getAllEntities());
     }
 }

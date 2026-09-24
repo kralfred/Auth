@@ -1,7 +1,7 @@
 // infrastructure/API/BaseApiRepository.js
 import { UserRepository } from "../../domain/irepositories/UserRepository.js";
+import { DpopUtils } from "../UI/utils/DpopUtils.js";
 
-// We extend the domain repo so this class "counts" as a UserRepository
 export class BaseApiRepository extends UserRepository {
     constructor(baseUrl) {
         super(); 
@@ -9,27 +9,39 @@ export class BaseApiRepository extends UserRepository {
         this.token = null;
     }
 
-setToken(token) {
-    // If it's an object, extract the value string; otherwise, use the string directly
-    const tokenString = (token && typeof token === 'object') ? token.value : token;
-    
-    console.warn("BaseRepo: Storing raw token string: " + tokenString?.substring(0, 10) + "...");
-    this.token = tokenString;
-}
+    setToken(token) {
+        const tokenString = (token && typeof token === 'object') ? token.value : token;
+        console.warn("BaseRepo: Storing raw token string: " + tokenString?.substring(0, 10) + "...");
+        this.token = tokenString;
+    }
 
     async request(path, options = {}) {
         const url = `${this.baseUrl}${path}`;
-        
+        const method = (options.method || "GET").toUpperCase();
 
         const headers = {
             "Content-Type": "application/json",
             ...options.headers
         };
 
+        
+        try {
+            const dpopProof = await DpopUtils.generateProof(method, path);
+            if (dpopProof) {
+                headers["DPoP"] = dpopProof;
+                console.warn("DPoP generation:", dpopProof);
+            }
+        } catch (e) {
+            console.warn("DPoP generation skipped or unsupported:", e);
+        }
+
+        // Automatically attach Bearer token
         if (this.token) {
             headers["Authorization"] = `Bearer ${this.token}`;
         }
 
+        console.log("Request URL:", url);
+        console.log("Request Headers:", headers);
         const response = await fetch(url, {
             ...options,
             headers: headers
