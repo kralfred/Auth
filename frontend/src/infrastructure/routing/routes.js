@@ -1,7 +1,3 @@
-import { LoginView } from "../UI/views/LoginView.js";
-import { RegisterView } from "../UI/views/RegisterView.js";
-import { HomeView } from "../UI/views/HomeView.js";
-
 
 export const getRoutes = (viewFactory) => ([ 
   {
@@ -38,7 +34,7 @@ export const getRoutes = (viewFactory) => ([
   { 
       path: "/admin/permissions", 
       protected: true, 
-      createView: () => viewFactory.getPermissionView() 
+      createView: () => viewFactory.getAdminPermissionView() 
     }
   
 ]);

@@ -13,7 +13,7 @@ export class EntityService {
       return await this.userRepository.getAllUsers();
     }
 
-    // Generic REST call for standard entities (logs, permissions, rules, etc.)
+    
     return await this.entityRepository.getAll(key);
   }
 

@@ -1,4 +1,4 @@
-// infrastructure/API/ApiEntityRepository.js
+
 import { BaseApiRepository } from "./BaseApiRepository.js";
 
 export class ApiEntityRepository extends BaseApiRepository {

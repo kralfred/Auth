@@ -1,17 +1,18 @@
 import { PermissionView } from './PermissionView.js';
 import { LoginView } from './LoginView.js'
 import { RegisterView } from './RegisterView.js'
+import { AdminPermissionView } from './AdminPermissionView.js'
 import { HomeView } from './HomeView.js'
 import { UserManagementView } from './UserManagementView.js';
 import { LogsView } from './LogsView.js'
 
 export class ViewFactory {
-  constructor(authService, appState, userRepository, apiService, entityService) {
+  constructor(authService, appState, userRepository, entityService, adminService) {
     this.authService = authService;
     this.appState = appState; 
     this.userRepository = userRepository;
-    this.apiService = apiService;
     this.entityService = entityService;
+    this.adminService = adminService;
   }
 
   getLoginView() {
@@ -29,14 +30,12 @@ export class ViewFactory {
     return new UserManagementView(this.appState, this.userRepository);
   }
   getLogsView(){
-    return new LogsView(this.apiService, this.entityService);
-  }
-  getPermissionView(){
-    return new PermissionView(this.entityService);
-  }
-  getPermissionView() {
-    return new PermissionView(this.entityService);
+    return new LogsView(this.entityService);
   }
 
+
+  getAdminPermissionView(){
+    return new AdminPermissionView(this.adminService, this.entityService);
+  }
 
 }

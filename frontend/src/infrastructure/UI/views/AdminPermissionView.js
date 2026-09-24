@@ -1,9 +1,8 @@
-// infrastructure/UI/views/PermissionView.js
-// infrastructure/UI/views/PermissionView.js
-export class PermissionView {
-  constructor(entityService, adminService) {
-    this.entityService = entityService;
+
+export class AdminPermissionView {
+  constructor(adminService, entityService) {
     this.adminService = adminService;
+    this.entityService = entityService;
     this.selectedEntity = null;
     this.entities = [];
   }
@@ -110,12 +109,17 @@ export class PermissionView {
   async _loadEntities(container, attributeListContainer) {
     container.innerHTML = "<p>Loading entities...</p>";
     try {
+
+      
       this.entities = await this.adminService.loadEntities();
       container.innerHTML = "";
 
       if (!this.entities || this.entities.length === 0) {
         container.innerHTML = "<p>No entities found.</p>";
         return;
+      }
+      if(this.entities == undefined){
+        this.entities = []
       }
 
       this.entities.forEach((entity) => {
@@ -148,7 +152,7 @@ export class PermissionView {
         container.appendChild(item);
       });
     } catch (e) {
-      container.innerHTML = `<p style="color: red;">Failed to load entities: ${e.message}</p>`;
+      container.innerHTML = `<p style="color: red;">Failed to load entitiesss: ${e.message}</p>`;
     }
   }
 

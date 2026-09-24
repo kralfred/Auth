@@ -1,6 +1,7 @@
 
 import { CONFIG } from './config.js';
 import { ApiUserRepository } from './infrastructure/API/ApiUserRepository.js'
+import { ApiAdminRepository } from './infrastructure/API/ApiAdminRepository.js'
 import { MockApiUserRepository } from '../tests/mockDb/MockApiUserRepository.js'
 import { App } from './application/state/AppState.js';
 import { CookieTokenRepository } from './infrastructure/storage/CookieTokenRepository.js';
@@ -14,6 +15,7 @@ import { ApiAuthRepository } from './infrastructure/API/ApiAuthRepository.js';
 import { ApiTokenRepository } from './infrastructure/API/ApiTokenRepository.js';
 import { EntityService } from './application/service/EntityService.js';
 import { ApiEntityRepository } from './infrastructure/API/ApiEntityRepository.js'
+import { AdminService } from './application/service/AdminService.js';
 
 
 const isDevelopment = false;
@@ -22,7 +24,7 @@ const apiAuthRepo = new ApiAuthRepository(CONFIG.BACKEND_URL);
 const apiTokenRepo = new ApiTokenRepository(CONFIG.BACKEND_URL);
 const apiUserRepo = new ApiUserRepository(CONFIG.BACKEND_URL);
 const apiEntityRepo = new ApiEntityRepository(CONFIG.BACKEND_URL);
-
+const apiAdminRepo = new ApiAdminRepository(CONFIG.BACKEND_URL)
 
 const tokenRepo = new CookieTokenRepository();
 const userRepo = isDevelopment 
@@ -38,9 +40,9 @@ const entityService = new EntityService({
   userRepository: apiUserRepo,
   entityRepository: apiEntityRepo
 });
+const adminService = new AdminService(apiAdminRepo);
 
-
-const viewFactory = new ViewFactory(authService, appState, userRepo, entityService);
+const viewFactory = new ViewFactory(authService, appState, userRepo, entityService, adminService);
 const appRoutes = getRoutes(viewFactory);
 
 const container = document.getElementById("app");
