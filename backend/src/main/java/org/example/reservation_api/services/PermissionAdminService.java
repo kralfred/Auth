@@ -25,9 +25,30 @@ public class PermissionAdminService {
     private final PermissionCheckRepository permissionCheckRepository;
 
 
+    private void enforceGlobalAdminAccess() {
+        UUID currentUserId = SecurityUtils.getCurrentUserId();
+
+        boolean isSystemAdmin = permissionCheckRepository.hasSystemPermission(
+                currentUserId,
+                "MANAGE_SYSTEM_PERMISSIONS"
+        );
+
+        if (!isSystemAdmin) {
+            throw new AccessDeniedException("Access denied: Global permission administration privileges required.");
+        }
+    }
+
     @Transactional
-    public List<EntityType> getAllEntities(){
-       return adminRepository.listAllEntities();
+    public List<EntityType> getAllEntities() {
+        enforceGlobalAdminAccess(); // Global check added
+        return adminRepository.listAllEntities();
+    }
+
+    @Transactional
+    public String createEntity(String name) {
+        enforceGlobalAdminAccess(); // Global check added
+        UUID newEntityId = adminRepository.createEntity(name);
+        return "Successfully created with ID: " + newEntityId;
     }
 
     @Transactional

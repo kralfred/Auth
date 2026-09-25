@@ -32,7 +32,6 @@ export class Navbar {
     if (user) {
       const userPermissions = user.permissions || [];
 
-      // Map permission keys to link names and route paths
       const permissionRoutes = [
         { permission: "view_users", label: "Admin Panel", path: "/admin/view/users" },
         { permission: "string", label: "Permissions", path: "/admin/permissions" },
@@ -40,7 +39,6 @@ export class Navbar {
         { permission: "view_permissions", label: "Permissions", path: "/admin/permissions" }
       ];
 
-      // Render links for permissions present in user's permissions array
       permissionRoutes.forEach(item => {
         if (userPermissions.includes(item.permission)) {
           const navLink = document.createElement("a");

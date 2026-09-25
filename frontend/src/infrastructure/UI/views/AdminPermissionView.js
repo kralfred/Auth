@@ -1,4 +1,6 @@
 
+
+
 export class AdminPermissionView {
   constructor(adminService, entityService) {
     this.adminService = adminService;
@@ -9,24 +11,18 @@ export class AdminPermissionView {
 
   render() {
     const mainContainer = document.createElement("div");
-    mainContainer.style.display = "flex";
-    mainContainer.style.height = "calc(100vh - 80px)";
-    mainContainer.style.gap = "20px";
-    mainContainer.style.padding = "20px";
-    mainContainer.style.boxSizing = "border-box";
-    mainContainer.style.fontFamily = "sans-serif";
+    mainContainer.className = "admin-permissions-container";
 
     // Left Panel: Entity List
     const leftPanel = this._createPanel("Entities", "Add Entity", () => {
       this._showCreateModal("Entity", async (entityName) => {
-        await this.entityService.createEntityType?.(entityName);
+        await this.adminService.createEntityType(entityName);
         await this._loadEntities(entityListContainer);
       });
     });
 
     const entityListContainer = document.createElement("div");
-    entityListContainer.style.flex = "1";
-    entityListContainer.style.overflowY = "auto";
+    entityListContainer.className = "admin-panel-body";
     leftPanel.body.appendChild(entityListContainer);
 
     // Right Panel: Attribute List
@@ -36,67 +32,44 @@ export class AdminPermissionView {
         return;
       }
       this._showCreateModal("Attribute", async (attrName) => {
-        await this.entityService.createPermissionAttribute(attrName, this.selectedEntity.name || this.selectedEntity);
+        await this.entityService.createPermissionAttribute(
+          attrName,
+          this.selectedEntity.name || this.selectedEntity
+        );
         await this._loadAttributes(attributeListContainer, this.selectedEntity);
       });
     });
 
     const attributeListContainer = document.createElement("div");
-    attributeListContainer.style.flex = "1";
-    attributeListContainer.style.overflowY = "auto";
+    attributeListContainer.className = "admin-panel-body";
     rightPanel.body.appendChild(attributeListContainer);
 
-    // Initial state for attributes panel
-    attributeListContainer.innerHTML = `<p style="color: #7f8c8d; text-align: center; margin-top: 40px;">Select an entity from the left to view its attributes.</p>`;
+    attributeListContainer.innerHTML = `<p class="placeholder-text">Select an entity from the left to view its attributes.</p>`;
 
     mainContainer.appendChild(leftPanel.element);
     mainContainer.appendChild(rightPanel.element);
 
-    // Load Entities
     this._loadEntities(entityListContainer, attributeListContainer);
 
     return mainContainer;
   }
 
-  // Panel Component Shell
   _createPanel(titleText, buttonText, onButtonClick) {
     const panel = document.createElement("div");
-    Object.assign(panel.style, {
-      flex: "1",
-      display: "flex",
-      flexDirection: "column",
-      border: "1px solid #e0e0e0",
-      borderRadius: "8px",
-      backgroundColor: "#ffffff",
-      padding: "15px",
-      boxShadow: "0 2px 5px rgba(0,0,0,0.05)"
-    });
+    panel.className = "admin-panel";
 
     const header = document.createElement("h3");
+    header.className = "admin-panel-header";
     header.textContent = titleText;
-    header.style.margin = "0 0 15px 0";
-    header.style.color = "#2c3e50";
 
     const body = document.createElement("div");
-    body.style.flex = "1";
-    body.style.display = "flex";
-    body.style.flexDirection = "column";
 
     const footer = document.createElement("div");
-    footer.style.marginTop = "15px";
+    footer.className = "admin-panel-footer";
 
     const btn = document.createElement("button");
+    btn.className = "admin-panel-btn";
     btn.textContent = `+ ${buttonText}`;
-    Object.assign(btn.style, {
-      width: "100%",
-      padding: "10px",
-      backgroundColor: "#3498db",
-      color: "white",
-      border: "none",
-      borderRadius: "4px",
-      cursor: "pointer",
-      fontWeight: "bold"
-    });
     btn.onclick = onButtonClick;
 
     footer.appendChild(btn);
@@ -105,44 +78,27 @@ export class AdminPermissionView {
     return { element: panel, body };
   }
 
-  // Load Entities from Service
   async _loadEntities(container, attributeListContainer) {
     container.innerHTML = "<p>Loading entities...</p>";
     try {
-
-      
-      this.entities = await this.adminService.loadEntities();
+      this.entities = (await this.adminService.loadEntities()) || [];
       container.innerHTML = "";
 
-      if (!this.entities || this.entities.length === 0) {
+      if (this.entities.length === 0) {
         container.innerHTML = "<p>No entities found.</p>";
         return;
-      }
-      if(this.entities == undefined){
-        this.entities = []
       }
 
       this.entities.forEach((entity) => {
         const item = document.createElement("div");
+        item.className = "entity-item";
         const entityName = typeof entity === "string" ? entity : entity.name || entity.id;
-
         item.textContent = entityName;
-        Object.assign(item.style, {
-          padding: "12px 15px",
-          marginBottom : "8px",
-          border : "1px solid #ecf0f1",
-          borderRadius : "4px",
-          cursor : "pointer",
-          backgroundColor : "#f8f9fa",
-          transition : "all 0.2s"
-        });
 
         item.onclick = () => {
           this.selectedEntity = entity;
-          // Highlight selected
-          Array.from(container.children).forEach(child => child.style.backgroundColor = "#f8f9fa");
-          item.style.backgroundColor = "#e8f4f8";
-          item.style.borderColor = "#3498db";
+          Array.from(container.children).forEach(child => child.classList.remove("selected"));
+          item.classList.add("selected");
 
           if (attributeListContainer) {
             this._loadAttributes(attributeListContainer, entity);
@@ -152,11 +108,10 @@ export class AdminPermissionView {
         container.appendChild(item);
       });
     } catch (e) {
-      container.innerHTML = `<p style="color: red;">Failed to load entitiesss: ${e.message}</p>`;
+      container.innerHTML = `<p style="color: red;">Failed to load entities: ${e.message}</p>`;
     }
   }
 
-  // Load Attributes for Selected Entity
   async _loadAttributes(container, entity) {
     container.innerHTML = "<p>Loading attributes...</p>";
     try {
@@ -164,24 +119,17 @@ export class AdminPermissionView {
       const attributes = await this.entityService.getEntityById("attributes", entityName);
       
       container.innerHTML = "";
-
       const attrList = Array.isArray(attributes) ? attributes : attributes.attributes || [];
 
       if (attrList.length === 0) {
-        container.innerHTML = `<p style="color: #7f8c8d;">No attributes found for ${entityName}.</p>`;
+        container.innerHTML = `<p class="placeholder-text">No attributes found for ${entityName}.</p>`;
         return;
       }
 
       attrList.forEach((attr) => {
         const item = document.createElement("div");
+        item.className = "attribute-item";
         item.textContent = typeof attr === "string" ? attr : attr.name || attr.attributeName;
-        Object.assign(item.style, {
-          padding: "10px 12px",
-          marginBottom: "6px",
-          backgroundColor: "#ffffff",
-          border: "1px solid #e2e8f0",
-          borderRadius: "4px"
-        });
         container.appendChild(item);
       });
     } catch (e) {
@@ -189,97 +137,59 @@ export class AdminPermissionView {
     }
   }
 
-  // Universal Creation Modal
   _showCreateModal(typeLabel, onSubmit) {
-    const overlay = document.createElement("div");
-    Object.assign(overlay.style, {
-      position: "fixed",
-      top: "0",
-      left: "0",
-      width: "100vw",
-      height: "100vh",
-      backgroundColor: "rgba(0,0,0,0.5)",
-      display: "flex",
-      justifyContent: "center",
-      alignItems: "center",
-      zIndex: "1000"
-    });
+  const overlay = document.createElement("div");
+  overlay.className = "modal-overlay";
 
-    const modal = document.createElement("div");
-    Object.assign(modal.style, {
-      backgroundColor: "white",
-      padding: "25px",
-      borderRadius: "8px",
-      width: "350px",
-      boxShadow: "0 4px 15px rgba(0,0,0,0.2)"
-    });
+  const modal = document.createElement("div");
+  modal.className = "modal-content";
 
-    const title = document.createElement("h3");
-    title.textContent = `Create New ${typeLabel}`;
-    title.style.margin = "0 0 15px 0";
+  const title = document.createElement("h3");
+  title.textContent = `Create New ${typeLabel}`;
 
-    const input = document.createElement("input");
-    input.type = "text";
-    input.placeholder = `${typeLabel} Name`;
-    Object.assign(input.style, {
-      width: "100%",
-      padding: "10px",
-      boxSizing: "border-box",
-      marginBottom: "20px",
-      border: "1px solid #ccc",
-      borderRadius: "4px"
-    });
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "modal-input";
+  input.placeholder = `${typeLabel} Name`;
 
-    const actions = document.createElement("div");
-    actions.style.display = "flex";
-    actions.style.justifyContent = "flex-end";
-    actions.style.gap = "10px";
+  const actions = document.createElement("div");
+  actions.className = "modal-actions";
 
-    const cancelBtn = document.createElement("button");
-    cancelBtn.textContent = "Cancel";
-    Object.assign(cancelBtn.style, {
-      padding: "8px 15px",
-      backgroundColor: "#e74c3c",
-      color: "white",
-      border: "none",
-      borderRadius: "4px",
-      cursor: "pointer"
-    });
-    cancelBtn.onclick = () => document.body.removeChild(overlay);
+  const cancelBtn = document.createElement("button");
+  cancelBtn.className = "btn-cancel";
+  cancelBtn.textContent = "Cancel";
+  cancelBtn.onclick = () => document.body.removeChild(overlay);
 
-    const submitBtn = document.createElement("button");
-    submitBtn.textContent = "Create";
-    Object.assign(submitBtn.style, {
-      padding: "8px 15px",
-      backgroundColor: "#2ecc71",
-      color: "white",
-      border: "none",
-      borderRadius: "4px",
-      cursor: "pointer"
-    });
+  const submitBtn = document.createElement("button");
+  submitBtn.className = "btn-submit";
+  submitBtn.textContent = "Create";
 
-    submitBtn.onclick = async () => {
-      const val = input.value.trim();
-      if (!val) return;
+  // Handle click on submit button
+  submitBtn.onclick = async () => {
+    const val = input.value.trim();
+    if (!val) return;
 
-      submitBtn.disabled = true;
-      submitBtn.textContent = "Saving...";
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Saving...";
 
-      try {
-        await onSubmit(val);
-        document.body.removeChild(overlay);
-      } catch (err) {
-        alert(`Error creating ${typeLabel}: ${err.message}`);
-        submitBtn.disabled = false;
-        submitBtn.textContent = "Create";
-      }
-    };
+    try {
+      // Execute the callback function passed from render()
+      await onSubmit(val);
+      
+      // Close modal on success
+      document.body.removeChild(overlay);
+    } catch (err) {
+      alert(`Error creating ${typeLabel}: ${err.message}`);
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Create";
+    }
+  };
 
-    actions.append(cancelBtn, submitBtn);
-    modal.append(title, input, actions);
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
+  actions.append(cancelBtn, submitBtn);
+  modal.append(title, input, actions);
+  overlay.appendChild(modal);
+  document.body.appendChild(overlay);
 
-    input.focus();
-  }
+  input.focus();
+}
 }

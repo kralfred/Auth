@@ -41,6 +41,17 @@ public class PermissionAdminRepository {
                 .single();
     }
 
+    public UUID createEntity(String entityTypeName){
+        String sql = "INSERT INTO entity_type (id, name)" +
+                "VALUES (gen_random_uuid(), :entityTypeName)" +
+                "RETURNING id";
+
+        return jdbcClient.sql(sql)
+                .param("entityTypeName", entityTypeName)
+                .query(UUID.class)
+                .single();
+    }
+
     public List<EntityType> listAllEntities(){
         String sql = "SELECT * FROM entity_type";
 

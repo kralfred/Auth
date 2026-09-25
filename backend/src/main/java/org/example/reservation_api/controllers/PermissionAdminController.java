@@ -44,6 +44,11 @@ public class PermissionAdminController {
 
         return ResponseEntity.ok(Map.of("message", "Permission attribute rule updated successfully"));
     }
+    @PostMapping("/entity/create")
+    public ResponseEntity<String> createEntity(@RequestBody Map<String, String> payload){
+                String name = payload.get("name");
+                return ResponseEntity.ok(adminService.createEntity(name));
+    }
 
     @GetMapping("/view/entities/all")
     public ResponseEntity<List<EntityType>> listAllEntities(

@@ -18,5 +18,21 @@ async getAllEntities() {
     });
   }
 
+async addNewEntityType(name) {
+  console.log("Sending entity name to backend:", name);
+  
+  if (!name) {
+    throw new Error("Entity name cannot be empty");
+  }
+
+  return await this.request(`/api/admin/permissions/entity/create`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ name })
+  });
+}
+
 
 }
