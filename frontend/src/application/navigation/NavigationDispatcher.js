@@ -50,32 +50,40 @@ handleStateChange() {
     }
   }
 
-  async dispatch(routeOrPath) {
-    const context = this.appState.getContext();
-    if (context === 'LOADING') return;
 
+async dispatch(routeOrPath) {
+  const context = this.appState.getContext(); 
+  if (context === 'LOADING') return; 
 
-    let route = routeOrPath;
-    if (typeof routeOrPath === 'string') {
-      route = this.router.findRoute(routeOrPath);
+  
+  if (typeof routeOrPath === 'string') {
+    const targetHash = `#${routeOrPath}`;
+    if (window.location.hash !== targetHash) {
+      window.location.hash = targetHash; 
+      return; 
     }
-
-    if (!route) {
-      console.error("No route found for:", routeOrPath);
-      return;
-    }
-
-    const isAuth = this.appState.isAuthenticated();
-
-
-    if (route.protected && !isAuth) {
-      this.authService.handleUnauthorizedAccess(window.location.hash);
-      return;
-    }
-   
-    const view = route.createView(); 
-    this.render(view);
   }
+
+  let route = routeOrPath;
+  if (typeof routeOrPath === 'string') {
+    route = this.router.findRoute(routeOrPath); 
+  }
+
+  if (!route) {
+    console.error("No route found for:", routeOrPath); 
+    return;
+  }
+
+  const isAuth = this.appState.isAuthenticated(); 
+
+  if (route.protected && !isAuth) { 
+    this.authService.handleUnauthorizedAccess(window.location.hash);
+    return; 
+  }
+ 
+  const view = route.createView(); 
+  this.render(view); 
+}
 
   render(view) {
     console.log("Dispatcher rendering view:", view);

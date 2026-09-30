@@ -24,7 +24,7 @@ public sealed interface PermissionDTOs {
             String autoFillValue
     ) implements PermissionDTOs {
 
-        // Compact Constructor for applying defaults
+
         public CreatePermissionRequest {
             if (permissionName == null || permissionName.isBlank()) {
                 permissionName = "UNNAMED_PERMISSION_" + UUID.randomUUID().toString().substring(0, 8);
@@ -40,6 +40,11 @@ public sealed interface PermissionDTOs {
             }
         }
     }
+    record EntityAttribute(
+            @NotBlank UUID id,
+            String name
+    ) implements PermissionDTOs{}
+
      record CreateAttributeRequest(
             @NotBlank String entityTypeName,
             @NotBlank String attributeName

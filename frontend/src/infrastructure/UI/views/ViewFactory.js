@@ -35,7 +35,7 @@ export class ViewFactory {
 
 
   getAdminPermissionView(){
-    return new AdminPermissionView(this.adminService, this.entityService);
+    return new AdminPermissionView(this.adminService);
   }
 
 }

@@ -58,4 +58,9 @@ public class PermissionAdminController {
         log.info("Fetching entities for user: {}", currentUserId);
         return ResponseEntity.ok(adminService.getAllEntities());
     }
+    @GetMapping("/view/entities/{entityId}/attributes")
+    public ResponseEntity<List<EntityAttribute>> getAttributesByEntity(@PathVariable UUID entityId) {
+        List<EntityAttribute> attributes = adminService.getAttributesOfEntity(entityId);
+        return ResponseEntity.ok(attributes);
+    }
 }

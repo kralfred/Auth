@@ -37,6 +37,11 @@ public class PermissionAdminService {
             throw new AccessDeniedException("Access denied: Global permission administration privileges required.");
         }
     }
+    @Transactional
+    public List<EntityAttribute> getAttributesOfEntity(UUID entityId) {
+        enforceGlobalAdminAccess();
+        return adminRepository.findAttributesOfEntity(entityId);
+    }
 
     @Transactional
     public List<EntityType> getAllEntities() {

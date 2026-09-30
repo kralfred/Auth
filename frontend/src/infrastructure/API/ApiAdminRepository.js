@@ -12,8 +12,8 @@ async getAllEntities() {
     });
   }
 
-   async getEntityAttributes(string){
-       return await this.request(`/api/admin/permissions/view/entities/all`, {
+   async getEntityAttributes(entityId){
+       return await this.request(`/api/admin/permissions/view/entities/${entityId}/attributes`, {
       method: "GET"
     });
   }

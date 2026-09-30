@@ -46,7 +46,7 @@ public class SessionRepository {
         params.put("is_active", session.isActive());
 
         // Custom conversion specifically for Session timestamp
-        params.put("created_at", session.createdAt() != null ? Timestamp.from(session.createdAt()) : null);
+        params.put("created_at", session.createdAt() != null ? Timestamp.from(session.createdAt().toInstant()) : null);
 
         genericRepository.saveMap("session", params);
     }

@@ -33,7 +33,6 @@ public class GlobalExceptionHandler {
             // Set attribute for downstream handlers
             request.setAttribute("ERROR_DETAILS", errorDetails);
 
-            // Optionally log error details directly
             log.error("Handled Exception [{}] for Path [{}]: {}", errorCode, request.getRequestURI(), errorMessage);
         }
     }

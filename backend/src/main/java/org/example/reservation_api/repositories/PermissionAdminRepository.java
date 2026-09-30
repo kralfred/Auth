@@ -1,8 +1,10 @@
 package org.example.reservation_api.repositories;
 
+import org.example.reservation_api.DTO.PermissionDTOs;
 import org.example.reservation_api.entities.EntityType;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.example.reservation_api.DTO.PermissionDTOs.EntityAttribute;
 
 import java.util.List;
 import java.util.UUID;
@@ -14,6 +16,14 @@ public class PermissionAdminRepository {
 
     public PermissionAdminRepository(JdbcClient jdbcClient) {
         this.jdbcClient = jdbcClient;
+    }
+
+    public List<EntityAttribute> findAttributesOfEntity(UUID entityId){
+        String sql = "SELECT * FROM targetable_attribute WHERE entity_type_id = :entityId";
+        return jdbcClient.sql(sql)
+                .param("entityId", entityId)
+                .query(EntityAttribute.class)
+                .list();
     }
 
     public UUID createAttribute(String entityTypeName, String attributeName) {

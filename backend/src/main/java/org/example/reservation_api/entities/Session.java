@@ -1,7 +1,7 @@
 package org.example.reservation_api.entities;
 
-
-import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.UUID;
 
 public record Session(
@@ -12,10 +12,18 @@ public record Session(
         String ipAddress,
         String userAgent,
         boolean isActive,
-        Instant createdAt
+        OffsetDateTime createdAt
 ) implements Identifiable {
-    // Constructor for new active session creation
     public Session(UUID userId, String deviceId, String dpopJkt, String ipAddress, String userAgent) {
-        this(UUID.randomUUID(), userId, deviceId, dpopJkt, ipAddress, userAgent, true, Instant.now());
+        this(
+                UUID.randomUUID(),
+                userId,
+                deviceId,
+                dpopJkt,
+                ipAddress,
+                userAgent,
+                true,
+                OffsetDateTime.now(ZoneOffset.UTC)
+        );
     }
 }
