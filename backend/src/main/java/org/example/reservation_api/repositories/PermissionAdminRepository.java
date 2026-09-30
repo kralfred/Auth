@@ -26,18 +26,12 @@ public class PermissionAdminRepository {
                 .list();
     }
 
-    public UUID createAttribute(String entityTypeName, String attributeName) {
+    public UUID createAttribute(UUID EntityTypeId, String attributeName) {
         String sql = """
-        WITH target_entity AS (
-            INSERT INTO entity_type (id, name)
-            VALUES (gen_random_uuid(), :entityTypeName)
-            ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-            RETURNING id
-        )
         INSERT INTO targetable_attribute (id, entity_type_id, name)
         VALUES (
             gen_random_uuid(),
-            (SELECT id FROM target_entity),
+            :EntityTypeId,
             :attributeName
         )
         ON CONFLICT (entity_type_id, name) DO UPDATE SET name = EXCLUDED.name
@@ -45,7 +39,7 @@ public class PermissionAdminRepository {
     """;
 
         return jdbcClient.sql(sql)
-                .param("entityTypeName", entityTypeName)
+                .param("EntityTypeId", EntityTypeId)
                 .param("attributeName", attributeName)
                 .query(UUID.class)
                 .single();

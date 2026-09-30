@@ -1,5 +1,6 @@
 package org.example.reservation_api.controllers;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.reservation_api.DTO.ConfigureRuleRequest;
@@ -25,18 +26,6 @@ public class PermissionAdminController {
 
     private final PermissionAdminService adminService;
 
-    @PostMapping("/attributes/create")
-    public ResponseEntity<Map<String, Object>> createAttribute(@RequestBody CreateAttributeRequest request) {
-
-        log.error("Failed to persist API log: {}");
-
-        UUID attributeId = adminService.registerNewAttribute(request);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "message", "Targetable attribute registered successfully",
-                "attributeId", attributeId
-        ));
-    }
 
     @PutMapping("/rules")
     public ResponseEntity<Map<String, String>> configureRule(@RequestBody ConfigureRuleRequest request) {
@@ -49,12 +38,24 @@ public class PermissionAdminController {
                 String name = payload.get("name");
                 return ResponseEntity.ok(adminService.createEntity(name));
     }
+    @PostMapping("/create/{entityId}/attribute")
+    public ResponseEntity<Map<String, Object>> createAttributeForEntity(
+            @PathVariable UUID entityId,
+            @Valid @RequestBody CreateAttributeForEntityRequest request
+    ) {
+        UUID attributeId = adminService.createNewTargetableAttribute(entityId, request.name());
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
+                "message", "Attribute created successfully",
+                "attributeId", attributeId,
+                "entityId", entityId
+        ));
+    }
 
     @GetMapping("/view/entities/all")
     public ResponseEntity<List<EntityType>> listAllEntities(
             @AuthenticationPrincipal UUID currentUserId
     ) {
-        // currentUserId will automatically be populated from the JWT / SecurityContext
         log.info("Fetching entities for user: {}", currentUserId);
         return ResponseEntity.ok(adminService.getAllEntities());
     }

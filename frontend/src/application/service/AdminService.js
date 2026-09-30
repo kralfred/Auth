@@ -41,7 +41,7 @@ export class AdminService {
 
     return await this.getAttributesForEntity(entityId);
   }
-
+               
 
   async loadEntities() {
     const rawEntities = (await this.adminRepository.getAllEntities()) || [];
@@ -61,6 +61,8 @@ export class AdminService {
     await this.adminRepository.getEntityAttributes(entityId);
   }
   async createPermissionAttribute(attributeName){
+    console.error("creating new attribute");
+    await this.adminRepository.addNewEntityAttribute(this.selectedEntity.id, attributeName);
   }
 
 

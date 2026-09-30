@@ -1,7 +1,6 @@
 export class AdminPermissionView {
-  constructor(adminService, entityService) {
+  constructor(adminService) {
     this.adminService = adminService;
-    this.entityService = entityService;
   }
 
   render() {
@@ -28,9 +27,8 @@ export class AdminPermissionView {
         return;
       }
       this._showCreateModal("Attribute", async (attrName) => {
-        await this.entityService.createPermissionAttribute(
-          attrName,
-          selectedEntity.name || selectedEntity.id
+        await this.adminService.createPermissionAttribute(
+          attrName
         );
         await this._loadAttributes(attributeListContainer);
       });

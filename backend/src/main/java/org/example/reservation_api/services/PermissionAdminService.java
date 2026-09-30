@@ -45,8 +45,14 @@ public class PermissionAdminService {
 
     @Transactional
     public List<EntityType> getAllEntities() {
-        enforceGlobalAdminAccess(); // Global check added
+        enforceGlobalAdminAccess();
         return adminRepository.listAllEntities();
+    }
+
+    @Transactional
+    public UUID createNewTargetableAttribute(UUID entityType, String attributeName){
+        enforceGlobalAdminAccess();
+       return adminRepository.createAttribute(entityType, attributeName);
     }
 
     @Transactional
@@ -56,23 +62,6 @@ public class PermissionAdminService {
         return "Successfully created with ID: " + newEntityId;
     }
 
-    @Transactional
-    public UUID registerNewAttribute(CreateAttributeRequest request) {
-        UUID currentUserId = SecurityUtils.getCurrentUserId();
-
-        log.error("Failed to persist API log: {}" + currentUserId);
-        System.out.println("DEBUG Active User ID: " + currentUserId);
-        boolean isSystemAdmin = permissionCheckRepository.hasSystemPermission(
-                currentUserId,
-                "MANAGE_SYSTEM_PERMISSIONS"
-        );
-
-        if (!isSystemAdmin) {
-            throw new AccessDeniedException("Access denied: Global permission administration privileges required.");
-        }
-
-        return adminRepository.createAttribute(request.entityTypeName(), request.attributeName());
-    }
 
     @Transactional
     public void configureAttributeRules(ConfigureRuleRequest request) {
