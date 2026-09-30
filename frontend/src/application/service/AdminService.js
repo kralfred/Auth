@@ -3,7 +3,7 @@ export class AdminService {
     this.adminRepository = adminRepository;
     this.entities = [];
     this.selectedEntity = null;
-    this.loadedEntities = [];
+    this.attributeCache = new Map();
   }
 
   getEntities() {
@@ -17,12 +17,34 @@ export class AdminService {
   setSelectedEntity(entity) {
     this.selectedEntity = entity;
   }
+  async getAttributesForEntity(entityId) {
+    if (!entityId) return [];
+    if (this.attributeCache.has(entityId)) {
+      console.log(`Cache hit for entity: ${entityId}`);
+      return this.attributeCache.get(entityId);
+    }
+    console.log(`Cache miss for entity: ${entityId}. Fetching from API...`);
+    const response = await this.adminRepository.getEntityAttributes(entityId);
+    const attrList = Array.isArray(response) ? response : response.attributes || [];
+
+    this.attributeCache.set(entityId, attrList);
+
+    return attrList;
+  }
+
+  async loadSelectedEntityAttributes() {
+    if (!this.selectedEntity) return [];
+
+    const entityId = typeof this.selectedEntity === "string"
+      ? this.selectedEntity
+      : this.selectedEntity.id || this.selectedEntity.name;
+
+    return await this.getAttributesForEntity(entityId);
+  }
 
 
   async loadEntities() {
     const rawEntities = (await this.adminRepository.getAllEntities()) || [];
-
-    // Normalize and store in service state
     this.entities = rawEntities.map((entity) => ({
       id: typeof entity === "string" ? entity : entity.id || entity.name,
       name: typeof entity === "string" ? entity : entity.name || entity.id
@@ -38,20 +60,9 @@ export class AdminService {
   async loadEntityAttributes(entityId){
     await this.adminRepository.getEntityAttributes(entityId);
   }
-
-
-  async loadSelectedEntityAttributes() {
-    if (!this.selectedEntity) return [];
-
-    const entityId = this.selectedEntity.id || this.selectedEntity.name;
-    const response = await this.adminRepository.getEntityAttributes(entityId);
-    const attrList = Array.isArray(response) ? response : response.attributes || [];
-
-    return attrList.map((attr) => ({
-      id: typeof attr === "string" ? attr : attr.id || attr.attributeName,
-      name: typeof attr === "string" ? attr : attr.name || attr.attributeName
-    }));
+  async createPermissionAttribute(attributeName){
   }
+
 
   async createEntityType(name) {
     if (!name) throw new Error("Entity name is required.");
