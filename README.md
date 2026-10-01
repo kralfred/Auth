@@ -1,26 +1,17 @@
-A webapp that users can login to and view or modify reservations based on their authority.
+Introduction
+
+Welcome to my humble web app, which is used to establish and verify Authorization and Authentication.
 
 
-Frontend - Javascript
-Backend - Java
-Database - Postgre (runnable with Docker)
 
-Sensetive information is kept in a secret.env file, which is in a directory above both front-end and back-end, so it is necesary to set that up in order to run localy :) the file
-should look something like this:
-
-DB_USERNAME=your_username
-DB_PASSWORD=your_password
-DB_NAME=db_name
-DB_PORT=5432
-
-The docker compose file will not register the file, unless it's in the same folder, so you need to use this command before running the app, so that the path gets set correctly:
-
-docker compose --env-file ../secret.env up -d
+Frontend - JavaScript
+Backend - Java, Postgre (runnable with Docker)
 
 
-Backend: 
+Sensitive information is kept in a secret.env file, which is in a directory above both front-end and back-end. Often, the Java IDE won't register the file, so it's necasary to add it in the project setup to run locally. For production, names of the enviroment variables should then be named the same as it is in the file. Usually, the database hosting service generates some key value, so it is good to start with that first. I use [neon](https://neon.com/) for the database hosting, because they offer a free hosting service, it does however take a little while upon the initial query to wake up, so when you want to log-in/register, you'll have to wait a few seconds. To host the back-end server I use google cloud which is also for free, but I find the platform quite chaotic and hard to navigate. For the setup on google I use the [cloud build file](cloudbuild.yaml), the API endpoints that my front-end uses to communicate with the back-end can be found [here](https://amazing-api-460348586740.europe-central2.run.app/swagger-ui/index.html). Lastly, the front-end which is done in plain JavaScript is hosted on [Vercel](https://vercel.com/), a super cool and easy to use platform for hosting my JavaScript app.
 
-You can check the APIs with swagger
+
+
 
 [![ER Diagram](./docs/er-diagram.svg)](./docs/er-diagram.svg)
 
