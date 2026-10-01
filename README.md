@@ -18,12 +18,11 @@ Sensitive information is kept in a secret.env file, which is in a directory abov
 [![ER Diagram](./docs/er-diagram.png)](./docs/er-diagram.pdf)
 
 
-```mermaid
 
 
 > Interactive version: [dbdiagram.io](https://dbdiagram.io/d/...)
 
-```
+
 
 
 ```mermaid
