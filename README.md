@@ -20,7 +20,7 @@ Sensitive information is kept in a secret.env file, which is in a directory abov
 
 
 
-> Interactive version: [dbdiagram.io](https://dbdiagram.io/d/...)
+> Interactive version: [dbdiagram.io](https://dbdiagram.io/d/6a55e2ccc3a90dd98d2de2ba)
 
 
 
