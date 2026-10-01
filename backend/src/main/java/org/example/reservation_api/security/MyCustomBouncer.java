@@ -54,18 +54,15 @@ public class MyCustomBouncer {
         if (!passwordEncoder.matches(request.password(), credentials.password())) {
             throw new BadCredentialsException("Invalid credentials");
         }
-        log.error("Correct credentials for " + request.username());
         String dpopJkt = null;
         if (dpopHeader != null && !dpopHeader.isBlank()) {
             dpopJkt = dpopService.verifyAndExtractJkt(dpopHeader, "POST", "/api/auth/login");
         }
-        log.error("dpopJkt extracted " + dpopJkt);
         SessionService.SessionResult sessionResult = sessionService.createSessionForDevice(
                 credentials.userId(),
                 request.deviceId(),
                 dpopJkt
         );
-        log.error("Session created " + sessionResult.rawRefreshToken());
         UUID currentGroupId = CurrentEnvironmentContext.get();
         if (currentGroupId == null) {
 
@@ -87,7 +84,6 @@ public class MyCustomBouncer {
                 pageAccess,
                 dpopJkt
         );
-        log.error("Token generated " + accessToken);
         return new LoginResponse(
                 accessToken,
                 expiration,

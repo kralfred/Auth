@@ -27,10 +27,7 @@ async addNewEntityType(name) {
 
   return await this.request(`/api/admin/permissions/entity/create`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ name })
+    body: JSON.stringify({ name: name })
   });
 }
  async addNewEntityAttribute(entityId, attributeName){

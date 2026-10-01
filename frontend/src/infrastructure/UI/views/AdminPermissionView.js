@@ -1,25 +1,27 @@
 export class AdminPermissionView {
   constructor(adminService) {
     this.adminService = adminService;
+    this.entityListContainer = null;
+    this.attributeListContainer = null;
   }
 
   render() {
     const mainContainer = document.createElement("div");
     mainContainer.className = "admin-permissions-container";
 
-    // Left Panel: Entity List
+    // Left Panel: Entities
     const leftPanel = this._createPanel("Entities", "Add Entity", () => {
       this._showCreateModal("Entity", async (entityName) => {
         await this.adminService.createEntityType(entityName);
-        await this._loadEntities(entityListContainer);
+        await this._loadEntities();
       });
     });
 
-    const entityListContainer = document.createElement("div");
-    entityListContainer.className = "admin-panel-body";
-    leftPanel.body.appendChild(entityListContainer);
+    this.entityListContainer = document.createElement("div");
+    this.entityListContainer.className = "admin-panel-body";
+    leftPanel.body.appendChild(this.entityListContainer);
 
-    // Right Panel: Attribute List
+    // Right Panel: Attributes
     const rightPanel = this._createPanel("Attributes", "Add Attribute", () => {
       const selectedEntity = this.adminService.getSelectedEntity();
       if (!selectedEntity) {
@@ -27,24 +29,22 @@ export class AdminPermissionView {
         return;
       }
       this._showCreateModal("Attribute", async (attrName) => {
-        await this.adminService.createPermissionAttribute(
-          attrName
-        );
-        await this._loadAttributes(attributeListContainer);
+        await this.adminService.createPermissionAttribute(attrName);
+        await this._loadAttributes();
       });
     });
 
-    const attributeListContainer = document.createElement("div");
-    attributeListContainer.className = "admin-panel-body";
-    rightPanel.body.appendChild(attributeListContainer);
+    this.attributeListContainer = document.createElement("div");
+    this.attributeListContainer.className = "admin-panel-body";
+    rightPanel.body.appendChild(this.attributeListContainer);
 
-    attributeListContainer.innerHTML = `<p class="placeholder-text">Select an entity from the left to view its attributes.</p>`;
+    this.attributeListContainer.innerHTML = `<p class="placeholder-text">Select an entity from the left to view its attributes.</p>`;
 
     mainContainer.appendChild(leftPanel.element);
     mainContainer.appendChild(rightPanel.element);
 
-    // Trigger initial load
-    this._loadEntities(entityListContainer, attributeListContainer);
+    // Initial load
+    this._loadEntities();
 
     return mainContainer;
   }
@@ -73,62 +73,55 @@ export class AdminPermissionView {
     return { element: panel, body };
   }
 
-  async _loadEntities(container, attributeListContainer) {
-    container.innerHTML = "<p>Loading entities...</p>";
+  async _loadEntities() {
+    this.entityListContainer.innerHTML = "<p>Loading entities...</p>";
     try {
-      // Get state managed by service
       const entities = await this.adminService.loadEntities();
-      container.innerHTML = "";
+      this.entityListContainer.innerHTML = "";
 
       if (!entities || entities.length === 0) {
-        container.innerHTML = "<p>No entities found.</p>";
+        this.entityListContainer.innerHTML = "<p>No entities found.</p>";
         return;
       }
 
       entities.forEach((entity) => {
         const item = document.createElement("div");
         item.className = "entity-item";
-        const entityName = typeof entity === "string" ? entity : entity.name || entity.id;
-        item.textContent = entityName;
+        item.textContent = entity.name || entity.id;
 
-        // Check if this entity is already selected in the service state
         const selected = this.adminService.getSelectedEntity();
-        if (selected && (selected === entity || selected.id === entity.id)) {
+        if (selected && selected.id === entity.id) {
           item.classList.add("selected");
         }
 
-        item.onclick = () => {
-          // Store selection inside service
+        item.onclick = async () => {
           this.adminService.setSelectedEntity(entity);
 
-          Array.from(container.children).forEach(child => child.classList.remove("selected"));
+          // Update CSS selection styling
+          Array.from(this.entityListContainer.children).forEach(child => child.classList.remove("selected"));
           item.classList.add("selected");
 
-          if (attributeListContainer) {
-            this._loadAttributes(attributeListContainer);
-          }
+          await this._loadAttributes();
         };
 
-        container.appendChild(item);
+        this.entityListContainer.appendChild(item);
       });
     } catch (e) {
-      container.innerHTML = `<p style="color: red;">Failed to load entities: ${e.message}</p>`;
+      this.entityListContainer.innerHTML = `<p style="color: red;">Failed to load entities: ${e.message}</p>`;
     }
   }
 
-  async _loadAttributes(container) {
-    container.innerHTML = "<p>Loading attributes...</p>";
-    
+  async _loadAttributes() {
+    this.attributeListContainer.innerHTML = "<p>Loading attributes...</p>";
+
     try {
-      // Delegate fetching and state caching directly to service
       const attributes = await this.adminService.loadSelectedEntityAttributes();
+      this.attributeListContainer.innerHTML = "";
 
-      container.innerHTML = "";
-
-      if (attributes.length === 0) {
+      if (!attributes || attributes.length === 0) {
         const selected = this.adminService.getSelectedEntity();
         const selectedName = selected ? (selected.name || selected.id) : "entity";
-        container.innerHTML = `<p class="placeholder-text">No attributes found for ${selectedName}.</p>`;
+        this.attributeListContainer.innerHTML = `<p class="placeholder-text">No attributes found for ${selectedName}.</p>`;
         return;
       }
 
@@ -136,10 +129,10 @@ export class AdminPermissionView {
         const item = document.createElement("div");
         item.className = "attribute-item";
         item.textContent = typeof attr === "string" ? attr : attr.name || attr.attributeName;
-        container.appendChild(item);
+        this.attributeListContainer.appendChild(item);
       });
     } catch (e) {
-      container.innerHTML = `<p style="color: red;">Failed to load attributes: ${e.message}</p>`;
+      this.attributeListContainer.innerHTML = `<p style="color: red;">Failed to load attributes: ${e.message}</p>`;
     }
   }
 

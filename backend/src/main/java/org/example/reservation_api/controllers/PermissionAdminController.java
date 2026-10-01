@@ -6,11 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.reservation_api.DTO.ConfigureRuleRequest;
 import org.example.reservation_api.DTO.PermissionDTOs.*;
 import org.example.reservation_api.entities.EntityType;
-import org.example.reservation_api.security.SecurityUtils;
 import org.example.reservation_api.services.PermissionAdminService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,23 +32,12 @@ public class PermissionAdminController {
         return ResponseEntity.ok(Map.of("message", "Permission attribute rule updated successfully"));
     }
     @PostMapping("/entity/create")
-    public ResponseEntity<String> createEntity(@RequestBody Map<String, String> payload){
-                String name = payload.get("name");
+    public ResponseEntity<CreateEntityResponse> createEntity( @Valid @RequestBody CreateEntityRequest request){
+                String name = request.name();
+
                 return ResponseEntity.ok(adminService.createEntity(name));
     }
-    @PostMapping("/create/{entityId}/attribute")
-    public ResponseEntity<Map<String, Object>> createAttributeForEntity(
-            @PathVariable UUID entityId,
-            @Valid @RequestBody CreateAttributeForEntityRequest request
-    ) {
-        UUID attributeId = adminService.createNewTargetableAttribute(entityId, request.name());
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
-                "message", "Attribute created successfully",
-                "attributeId", attributeId,
-                "entityId", entityId
-        ));
-    }
 
     @GetMapping("/view/entities/all")
     public ResponseEntity<List<EntityType>> listAllEntities(

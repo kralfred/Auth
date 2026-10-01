@@ -17,31 +17,23 @@ export class AdminService {
   setSelectedEntity(entity) {
     this.selectedEntity = entity;
   }
+
   async getAttributesForEntity(entityId) {
     if (!entityId) return [];
     if (this.attributeCache.has(entityId)) {
-      console.log(`Cache hit for entity: ${entityId}`);
       return this.attributeCache.get(entityId);
     }
-    console.log(`Cache miss for entity: ${entityId}. Fetching from API...`);
     const response = await this.adminRepository.getEntityAttributes(entityId);
     const attrList = Array.isArray(response) ? response : response.attributes || [];
 
     this.attributeCache.set(entityId, attrList);
-
     return attrList;
   }
 
   async loadSelectedEntityAttributes() {
     if (!this.selectedEntity) return [];
-
-    const entityId = typeof this.selectedEntity === "string"
-      ? this.selectedEntity
-      : this.selectedEntity.id || this.selectedEntity.name;
-
-    return await this.getAttributesForEntity(entityId);
+    return await this.getAttributesForEntity(this.selectedEntity.id);
   }
-               
 
   async loadEntities() {
     const rawEntities = (await this.adminRepository.getAllEntities()) || [];
@@ -53,24 +45,28 @@ export class AdminService {
     return this.entities;
   }
 
-  async createEntityType(name){
-    console.error("Service firing add entity:");
-    await this.adminRepository.addNewEntityType(name);
-  }
-  async loadEntityAttributes(entityId){
-    await this.adminRepository.getEntityAttributes(entityId);
-  }
-  async createPermissionAttribute(attributeName){
-    console.error("creating new attribute");
-    await this.adminRepository.addNewEntityAttribute(this.selectedEntity.id, attributeName);
-  }
-
-
   async createEntityType(name) {
     if (!name) throw new Error("Entity name is required.");
+    const res = await this.adminRepository.addNewEntityType(name);
     
-    await this.adminRepository.addNewEntityType(name);
-    // Refresh entities list state automatically
+    const newEntity = {
+      id: res.id,
+      name: name
+    }
+    this.entities.push(newEntity);
+    alert(res.message);
+
     return await this.loadEntities();
+  }
+
+  async createPermissionAttribute(attributeName) {
+    if (!this.selectedEntity) throw new Error("No entity selected.");
+    
+    await this.adminRepository.addNewEntityAttribute(this.selectedEntity.id, attributeName);
+    
+    // CRITICAL FIX: Clear cache for this entity so the next fetch gets fresh API data
+    this.attributeCache.delete(this.selectedEntity.id);
+    
+    return await this.loadSelectedEntityAttributes();
   }
 }

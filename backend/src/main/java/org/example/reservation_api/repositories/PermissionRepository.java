@@ -43,8 +43,8 @@ public class PermissionRepository {
                 .update();
     }
     public void addAttributeToPermission(UUID nestedGroupId, UUID permissionId, List<UUID> attributeIds, Boolean isRequired, String autoFillValue){
-     String sql = "INSERT INTO permission_attribute (nested_group_id, permission_id, targetable_attribute_id, is_required, auto_fill_value)" +
-             "VALUES (:nestedGroupId, :permissionId, :attributeId, :isRequired, :autoFillValue)\n" +
+     String sql = "INSERT INTO permission_attribute (permission_id, targetable_attribute_id, is_required, auto_fill_value)" +
+             "VALUES (:permissionId, :attributeId, :isRequired, :autoFillValue)\n" +
              "            ON CONFLICT DO NOTHING;";
 
      var batch = attributeIds.stream().map(attributeId -> Map.of("nestedGroupId", nestedGroupId,

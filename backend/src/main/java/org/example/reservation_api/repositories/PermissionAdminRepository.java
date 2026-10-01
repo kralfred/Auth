@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository;
 import org.example.reservation_api.DTO.PermissionDTOs.EntityAttribute;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @Repository
@@ -24,6 +25,24 @@ public class PermissionAdminRepository {
                 .param("entityId", entityId)
                 .query(EntityAttribute.class)
                 .list();
+    }
+
+
+    public int grantAttributesToGroup(UUID groupId, List<UUID> attributeIds) {
+        if (attributeIds.isEmpty()) return 0;
+
+        UUID[] ids = attributeIds.toArray(UUID[]::new);
+
+        return jdbcClient.sql("""
+            INSERT INTO "group_attribute_grant"
+                ("nested_group_id", "targetable_attribute_id")
+            SELECT :groupId, a
+            FROM unnest(:ids::uuid[]) AS a
+            ON CONFLICT DO NOTHING
+            """)
+                .param("groupId", groupId)
+                .param("ids", ids)
+                .update();
     }
 
     public UUID createAttribute(UUID EntityTypeId, String attributeName) {
@@ -74,21 +93,19 @@ public class PermissionAdminRepository {
     ) {
         String sql = """
             INSERT INTO permission_attribute (
-                nested_group_id, 
                 permission_id, 
                 targetable_attribute_id, 
                 is_required, 
                 auto_fill_value
             )
             VALUES (:nestedGroupId, :permissionId, :attributeId, :isRequired, :autoFillValue)
-            ON CONFLICT (nested_group_id, permission_id, targetable_attribute_id)
+            ON CONFLICT (permission_id, targetable_attribute_id)
             DO UPDATE SET 
                 is_required = EXCLUDED.is_required,
                 auto_fill_value = EXCLUDED.auto_fill_value;
         """;
 
         jdbcClient.sql(sql)
-                .param("nestedGroupId", nestedGroupId)
                 .param("permissionId", permissionId)
                 .param("attributeId", attributeId)
                 .param("isRequired", isRequired)

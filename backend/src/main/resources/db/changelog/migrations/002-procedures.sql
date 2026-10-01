@@ -42,8 +42,6 @@ $$ LANGUAGE plpgsql;
 
 
 
-
--- 2. Create the updated function with p_nested_group_id
 CREATE OR REPLACE FUNCTION fn_get_entity_access(
     p_user_id UUID,
     p_nested_group_id UUID
@@ -54,15 +52,14 @@ CREATE OR REPLACE FUNCTION fn_get_entity_access(
 SELECT DISTINCT e.name AS entity_type
 FROM "group_member" gm
          JOIN "group_permission" gp
-              ON gm.group_id = gp.owner_users_group
-                  AND gm.nested_group_id = gp.nested_group_id
+              ON gp.owner_users_group = gm.group_id
+                  AND gp.nested_group_id   = gm.nested_group_id
          JOIN "permission_attribute" pa
-              ON gp.permission_id = pa.permission_id
-                  AND gp.nested_group_id = pa.nested_group_id
+              ON pa.permission_id = gp.permission_id
          JOIN "targetable_attribute" ta
-              ON pa.targetable_attribute_id = ta.id
+              ON ta.id = pa.targetable_attribute_id
          JOIN "entity_type" e
-              ON ta.entity_type_id = e.id
+              ON e.id = ta.entity_type_id
 WHERE gm.user_id = p_user_id
   AND gm.nested_group_id = p_nested_group_id;
 $$;

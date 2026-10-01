@@ -37,6 +37,14 @@ public class PermissionAdminService {
             throw new AccessDeniedException("Access denied: Global permission administration privileges required.");
         }
     }
+
+    @Transactional
+    public void grantAttributesToNestedGroup(List<UUID> attributes, UUID targetNestedGroup){
+        enforceGlobalAdminAccess();
+        adminRepository.grantAttributesToGroup(targetNestedGroup, attributes);
+    }
+
+
     @Transactional
     public List<EntityAttribute> getAttributesOfEntity(UUID entityId) {
         enforceGlobalAdminAccess();
@@ -56,10 +64,15 @@ public class PermissionAdminService {
     }
 
     @Transactional
-    public String createEntity(String name) {
+    public CreateEntityResponse createEntity(String name) {
         enforceGlobalAdminAccess(); // Global check added
         UUID newEntityId = adminRepository.createEntity(name);
-        return "Successfully created with ID: " + newEntityId;
+        CreateEntityResponse response = new CreateEntityResponse(
+                newEntityId,
+                name,
+                "Successfully created with ID: "
+        );
+        return response;
     }
 
 

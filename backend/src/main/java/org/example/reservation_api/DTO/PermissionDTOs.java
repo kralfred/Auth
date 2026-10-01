@@ -1,7 +1,6 @@
 package org.example.reservation_api.DTO;
 
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
 import java.util.List;
@@ -48,9 +47,13 @@ public sealed interface PermissionDTOs {
             String name
     ) implements PermissionDTOs{}
 
-     record CreateAttributeRequest(
-            @NotBlank String entityTypeName,
-            @NotBlank String attributeName
+     record CreateEntityRequest(
+             @NotBlank(message = "Entity name is required") String name
+    ) implements PermissionDTOs {}
+    record CreateEntityResponse(
+            UUID id,
+            String name,
+            String message
     ) implements PermissionDTOs {}
 
 }
