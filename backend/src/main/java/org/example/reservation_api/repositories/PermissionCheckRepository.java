@@ -43,12 +43,12 @@ public class PermissionCheckRepository {
             SELECT EXISTS (
                 SELECT 1
                 FROM group_member gm
-                JOIN permission_attribute pa ON pa.nested_group_id = gm.nested_group_id
-                JOIN permission p ON p.id = pa.permission_id
-                JOIN nested_group ng ON ng.id = gm.nested_group_id
+                JOIN group_permission gp
+                  ON gp.owner_users_group = gm.group_id
+                 AND gp.nested_group_id   = gm.nested_group_id
+                JOIN permission p ON p.id = gp.permission_id
                 WHERE gm.user_id = :userId
-                  AND p.name = :permissionName
-                  AND (ng.id = :rootGroupId OR ng.parent_group_id IS NULL)
+                  AND p.name     = :permissionName
             );
         """;
 

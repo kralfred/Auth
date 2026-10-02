@@ -9,6 +9,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -52,6 +54,7 @@ public class APILogRepository {
                 .query(ApiLog.class)
                 .list();
     }
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void saveLog(ApiLog log) {
         String sql = """
             INSERT INTO "api_log" (

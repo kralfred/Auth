@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.reservation_api.DTO.AuthDTOs.*;
 import org.example.reservation_api.projections.UserCredentialsProjection;
+import org.example.reservation_api.repositories.PermissionCheckRepository;
 import org.example.reservation_api.repositories.PermissionRepository;
 import org.example.reservation_api.repositories.SystemSettingRepository;
 import org.example.reservation_api.repositories.UserRepository;
@@ -29,6 +30,7 @@ public class MyCustomBouncer {
     private final PermissionRepository permissionRepository;
     private final PermissionService permissionService;
     private final SessionService sessionService;
+    private final PermissionCheckRepository permissionCheckRepository;
     private final DpopService dpopService; // Injected DPoP parsing/validation service
     private final SystemSettingRepository systemSettingRepository;
     private final UserService userService;
@@ -38,6 +40,12 @@ public class MyCustomBouncer {
             return false;
         }
         return permissionService.hasPermission(userId, nestedGroupId, permission);
+    }
+
+    public boolean hasSystemPermission(String permission) {
+        UUID userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) return false;
+        return permissionCheckRepository.hasSystemPermission(userId, permission);
     }
 
     @Transactional

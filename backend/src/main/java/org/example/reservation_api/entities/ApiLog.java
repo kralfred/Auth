@@ -5,6 +5,7 @@ import java.util.UUID;
 
 public record ApiLog(
         UUID id,
+        UUID nestedGroupId,
         String eventType,
         String method,
         String path,
@@ -16,7 +17,7 @@ public record ApiLog(
 ) implements Identifiable {
 
     // Compact or convenient secondary constructor
-    public ApiLog(String eventType, String method, String path, int status, long durationMs, UUID userId, Timestamp createdAt, String errorDetails) {
-        this(UUID.randomUUID(), eventType, method, path, status, durationMs, userId, createdAt, errorDetails);
+    public ApiLog(UUID nestedGroupId, String eventType, String method, String path, int status, long durationMs, UUID userId, Timestamp createdAt, String errorDetails) {
+        this(UUID.randomUUID(),nestedGroupId , eventType, method, path, status, durationMs, userId, createdAt, errorDetails);
     }
 }

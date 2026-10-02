@@ -11,6 +11,7 @@ import org.example.reservation_api.DTO.ErrorDetails;
 import org.example.reservation_api.entities.ApiLog;
 import org.example.reservation_api.repositories.APILogRepository;
 import org.example.reservation_api.repositories.GenericRepository;
+import org.example.reservation_api.security.CurrentEnvironmentContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -53,7 +54,10 @@ public class APILogger {
         String path = (request != null) ? request.getRequestURI() : "UNKNOWN";
 
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        UUID userId = null; // Map user ID from auth context if available
+        UUID userId = null;
+        if (auth != null && auth.getPrincipal() instanceof UUID uuid) {
+            userId = uuid;
+        }
 
         String methodName = joinPoint.getSignature().getName();
         String className = joinPoint.getTarget().getClass().getSimpleName();
@@ -90,8 +94,9 @@ public class APILogger {
                 }
             }
 
-
+            UUID nestedGroupId = CurrentEnvironmentContext.get();
             ApiLog apiLog = new ApiLog(
+                    nestedGroupId,
                     eventType,
                     httpMethod,
                     path,

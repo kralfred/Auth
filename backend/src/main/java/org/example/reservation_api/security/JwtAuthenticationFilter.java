@@ -67,7 +67,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
                     // 1. Wrap in ArrayList to avoid UnsupportedOperationException on unmodifiable lists
                     List<SimpleGrantedAuthority> authorities = new ArrayList<>(jwtService.getAuthorities(jwt));
-                    authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
+
 
                     if (userId != null) {
                         // 2. Set UUID as principal so SecurityUtils can extract it without throwing exceptions

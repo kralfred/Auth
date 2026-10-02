@@ -9,6 +9,7 @@ import org.example.reservation_api.entities.EntityType;
 import org.example.reservation_api.services.PermissionAdminService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
@@ -20,6 +21,7 @@ import java.util.UUID;
 @RequestMapping("/api/admin/permissions")
 @RequiredArgsConstructor
 @Slf4j
+@PreAuthorize("@myCustomBouncer.canSystem('MANAGE_SYSTEM_PERMISSIONS')")
 public class PermissionAdminController {
 
     private final PermissionAdminService adminService;

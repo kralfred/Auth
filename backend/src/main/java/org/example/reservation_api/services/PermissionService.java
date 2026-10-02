@@ -1,6 +1,7 @@
 package org.example.reservation_api.services;
 
 import org.example.reservation_api.DTO.PermissionDTOs;
+import org.example.reservation_api.security.SecurityUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.reservation_api.repositories.PermissionRepository;
 import org.springframework.stereotype.Service;
@@ -24,7 +25,6 @@ public class PermissionService {
 
     @Transactional
     public void createPermission(PermissionDTOs.CreatePermissionRequest request) {
-        // Service Rule: Validate attribute assignment against database
         if (!request.targetableAttributeIds().isEmpty()) {
             boolean allowed = permissionRepository.areAttributesAllowedForGroup(
                     request.nestedGroupId(),
