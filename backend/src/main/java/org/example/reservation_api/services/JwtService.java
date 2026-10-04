@@ -126,6 +126,11 @@ public class JwtService {
     }
 
 
+    public String extractDpopJkt(String token){
+        Claims claims = extractAllClaims(token);
+        return claims.get("dpop_jkt", String.class);
+    }
+
     public Claims extractAllClaims(String token) {
         return Jwts.parser()
                 .verifyWith(getSignInKey())
