@@ -4,17 +4,12 @@ import { User } from "../../domain/entities/User.js";
 import { Token } from "../../domain/entities/Token.js";
 
 export class ApiTokenRepository extends BaseApiRepository {
-  constructor(baseUrl) {
-    super(baseUrl);
-  }
+
 
   async validateToken(tokenString) {
     const data = await this.request("/api/auth/validate", {
       method: "POST",
-      headers: {
-        "Authorization": `Bearer ${tokenString}`, 
-        "Content-Type": "application/json"
-      }
+      token: tokenString 
     });
 
     return {

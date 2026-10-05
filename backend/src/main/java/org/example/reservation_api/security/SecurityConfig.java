@@ -33,6 +33,7 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final UserRepository userRepository;
+    private final DpopAuthenticationFilter dpopAuthFilter;
 
     @Bean
     public UserDetailsService userDetailsService() {
@@ -91,7 +92,8 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterAfter(dpopAuthFilter, JwtAuthenticationFilter.class);
 
         return http.build();
     }

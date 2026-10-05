@@ -1,64 +1,51 @@
-// infrastructure/utils/DpopUtils.js
-
 export class DpopUtils {
-  static keyPair = null;
-
-  static async getKeyPair() {
-    if (!this.keyPair) {
-      this.keyPair = await window.crypto.subtle.generateKey(
-        {
-          name: "RSASSA-PKCS1-v1_5", // Standard RSA algorithm for RS256
-          modulusLength: 2048,
-          publicExponent: new Uint8Array([0x01, 0x00, 0x01]), // 65537
-          hash: { name: "SHA-256" }
-        },
-        false, // non-extractable private key
-        ["sign", "verify"]
-      );
-    }
-    return this.keyPair;
+  constructor(keyRepository) {
+    this.keyRepo = keyRepository;
   }
 
-  static async generateProof(htm, htu) {
-    const { publicKey, privateKey } = await this.getKeyPair();
-    const jwk = await window.crypto.subtle.exportKey("jwk", publicKey);
+  async generateProof(htm, htu, token) {
+    let pair = await this.keyRepo.getKeyPair();
+    if (!pair) {
+      pair = await this.#generateAndStore();
+    }
 
-    const header = {
-      typ: "dpop+jwt",
-      alg: "RS256", // Matches RSA key type expected by Nimbus
-      jwk: {
-        kty: jwk.kty,
-        n: jwk.n,
-        e: jwk.e
-      }
-    };
+    const jwk = await crypto.subtle.exportKey("jwk", pair.publicKey);
+    const header = { typ: "dpop+jwt", alg: "RS256", jwk: { kty: jwk.kty, n: jwk.n, e: jwk.e } };
 
     const payload = {
       jti: crypto.randomUUID(),
       htm: htm.toUpperCase(),
-      htu: htu,
-      iat: Math.floor(Date.now() / 1000)
+      htu,
+      iat: Math.floor(Date.now() / 1000),
+      ...(token ? { ath: await this.#computeAth(token) } : {})
     };
 
-    const base64UrlEncode = (obj) =>
-      btoa(JSON.stringify(obj))
-        .replace(/=/g, "")
-        .replace(/\+/g, "-")
-        .replace(/\//g, "_");
+    const unsigned = `${this.#encJson(header)}.${this.#encJson(payload)}`;
+    const sig = await crypto.subtle.sign(
+      { name: "RSASSA-PKCS1-v1_5" }, pair.privateKey,
+      new TextEncoder().encode(unsigned));
+    return `${unsigned}.${this.#encBytes(new Uint8Array(sig))}`;
+  }
 
-    const unsignedToken = `${base64UrlEncode(header)}.${base64UrlEncode(payload)}`;
+  async #generateAndStore() {
+    const pair = await crypto.subtle.generateKey(
+      { name: "RSASSA-PKCS1-v1_5", modulusLength: 2048,
+        publicExponent: new Uint8Array([1,0,1]), hash: "SHA-256" },
+      false, ["sign", "verify"]);
+    await this.keyRepo.saveKeyPair(pair);
+    return pair;
+  }
 
-    const signature = await window.crypto.subtle.sign(
-      { name: "RSASSA-PKCS1-v1_5" },
-      privateKey,
-      new TextEncoder().encode(unsignedToken)
-    );
+  async #computeAth(accessToken) {
+    const hash = await crypto.subtle.digest(
+      "SHA-256", new TextEncoder().encode(accessToken));
+    return this.#encBytes(new Uint8Array(hash));
+  }
 
-    const base64Signature = btoa(String.fromCharCode(...new Uint8Array(signature)))
-      .replace(/=/g, "")
-      .replace(/\+/g, "-")
-      .replace(/\//g, "_");
+  #encJson(obj) { return this.#encBytes(new TextEncoder().encode(JSON.stringify(obj))); }
 
-    return `${unsignedToken}.${base64Signature}`;
+  #encBytes(bytes) {
+    let s = ""; for (const b of bytes) s += String.fromCharCode(b);
+    return btoa(s).replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
   }
 }

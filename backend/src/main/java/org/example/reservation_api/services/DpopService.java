@@ -8,6 +8,9 @@ import com.nimbusds.jose.jwk.JWK;
 import com.nimbusds.jose.jwk.KeyType;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.SignedJWT;
+import lombok.RequiredArgsConstructor;
+import org.example.reservation_api.security.SecurityFeatureFlags;
+import org.example.reservation_api.security.SecurityFeatureFlags.*;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.stereotype.Service;
 
@@ -22,10 +25,11 @@ import java.util.Objects;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class DpopService {
 
     private static final long MAX_ALLOWED_AGE_SECONDS = 60;
-
+    private final SecurityFeatureFlags flags;
     // Algorithms we accept for DPoP proofs. Never allow "none" or symmetric (HS*).
     private static final Set<JWSAlgorithm> ALLOWED_ALGS = Set.of(
             JWSAlgorithm.ES256, JWSAlgorithm.ES384, JWSAlgorithm.ES512,
@@ -76,11 +80,16 @@ public class DpopService {
             Date iat   = claims.getIssueTime();
             String jti = claims.getJWTID();
 
-            if (htm == null || !htm.equalsIgnoreCase(expectedMethod)) {
-                throw new BadCredentialsException("DPoP 'htm' mismatch");
+            if (flags.getBoolean(Flag.DPOP_REQUIRE_HTM)) {
+                if (htm == null || !htm.equalsIgnoreCase(expectedMethod)) {
+                    throw new BadCredentialsException("DPoP 'htm' mismatch");
+                }
             }
-            if (htu == null || !htuMatches(htu, expectedUri)) {
-                throw new BadCredentialsException("DPoP 'htu' mismatch");
+
+            if(flags.getBoolean(Flag.DPOP_REQUIRE_HTU)) {
+                if (htu == null || !htuMatches(htu, expectedUri)) {
+                    throw new BadCredentialsException("DPoP 'htu' mismatch");
+                }
             }
             if (jti == null || jti.isBlank()) {
                 throw new BadCredentialsException("DPoP 'jti' missing");
@@ -90,7 +99,7 @@ public class DpopService {
                 throw new BadCredentialsException("DPoP proof has expired");
             }
 
-            if (accessToken != null) {
+            if (flags.getBoolean(Flag.DPOP_REQUIRE_ATH) && accessToken != null) {
                 String ath = claims.getStringClaim("ath");
                 if (ath == null || !ath.equals(computeAth(accessToken))) {
                     throw new BadCredentialsException("DPoP 'ath' mismatch");

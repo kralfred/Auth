@@ -1,10 +1,17 @@
 
 import { CONFIG } from './config.js';
+
+
+import { ApiClient } from './infrastructure/API/ApiClient.js';
+import { DpopUtils } from './infrastructure/UI/utils/DpopUtils.js';
+import { DeviceUtils } from './infrastructure/UI/utils/DeviceUtils.js';
 import { ApiUserRepository } from './infrastructure/API/ApiUserRepository.js'
 import { ApiAdminRepository } from './infrastructure/API/ApiAdminRepository.js'
 import { MockApiUserRepository } from '../tests/mockDb/MockApiUserRepository.js'
 import { App } from './application/state/AppState.js';
 import { CookieTokenRepository } from './infrastructure/storage/CookieTokenRepository.js';
+import { IndexedDbDpopKeyRepository } from './infrastructure/storage/IndexedDbDpopKeyRepository.js';
+import { InMemoryDpopKeyRepository } from './infrastructure/storage/InMemoryDpopKeyRepository.js';
 import { Router } from './infrastructure/routing/Router.js';
 import { getRoutes } from './infrastructure/routing/routes.js';
 import { ViewFactory } from './infrastructure/UI/views/ViewFactory.js';
@@ -19,14 +26,25 @@ import { AdminService } from './application/service/AdminService.js';
 
 
 const isDevelopment = false;
+const useIndexedDb = true;
 
-const apiAuthRepo = new ApiAuthRepository(CONFIG.BACKEND_URL);
-const apiTokenRepo = new ApiTokenRepository(CONFIG.BACKEND_URL);
-const apiUserRepo = new ApiUserRepository(CONFIG.BACKEND_URL);
-const apiEntityRepo = new ApiEntityRepository(CONFIG.BACKEND_URL);
-const apiAdminRepo = new ApiAdminRepository(CONFIG.BACKEND_URL)
+const keyRepo = useIndexedDb
+  ? new IndexedDbDpopKeyRepository()
+  : new InMemoryDpopKeyRepository();
 
-const apiRepos = [apiAuthRepo, apiTokenRepo, apiUserRepo, apiEntityRepo, apiAdminRepo];
+
+const dpop = new DpopUtils(keyRepo);
+
+const client = new ApiClient(CONFIG.BACKEND_URL, dpop);
+
+const deviceInfo = new DeviceUtils();
+
+const apiAuthRepo   = new ApiAuthRepository(client, deviceInfo);
+const apiTokenRepo  = new ApiTokenRepository(client);
+const apiUserRepo   = new ApiUserRepository(client);
+const apiEntityRepo = new ApiEntityRepository(client);
+const apiAdminRepo  = new ApiAdminRepository(client);
+
 
 const tokenRepo = new CookieTokenRepository();
 const userRepo = isDevelopment 
@@ -35,7 +53,7 @@ const userRepo = isDevelopment
 
 const appState = new App();
 
-const tokenService = new TokenService(apiTokenRepo, tokenRepo, appState, apiRepos);
+const tokenService = new TokenService(apiTokenRepo, tokenRepo, appState, client);
 const authService = new AuthService(apiAuthRepo, tokenService, appState);
 const entityService = new EntityService({
   userRepository: apiUserRepo,

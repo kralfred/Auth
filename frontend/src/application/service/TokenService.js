@@ -1,11 +1,10 @@
 // application/services/TokenService.js
 export class TokenService {
-  constructor(apiRepository, tokenRepository, appState, repositories = []) {
-    this.apiRepository = apiRepository;
+   constructor(apiRepository, tokenRepository, appState, apiClient) {
+    this.apiRepository = apiRepository;   // for validate/refresh endpoints
     this.tokenRepository = tokenRepository;
     this.appState = appState;
-    // Keep a list of all API repositories needing token synchronization
-    this.repositories = Array.isArray(repositories) ? repositories : [apiRepository];
+    this.apiClient = apiClient;           // for propagating the token
   }
 
   // Helper to set token across all registered API repositories
@@ -17,24 +16,21 @@ export class TokenService {
     });
   }
 
-  async applyTokensAndState(userObject, accessToken, refreshToken) {
-    console.warn("Setting user state:", userObject?.username || userObject?.id);
+   async applyTokensAndState(userObject, accessToken, refreshToken) {
     this.appState.setUser(userObject);
 
     if (accessToken) {
       const tokenString = typeof accessToken === 'object' ? accessToken.value : accessToken;
-      
-      // Update token on ALL repositories
-      this._setTokenOnAllRepos(tokenString);
-      
+
+      this.apiClient.setToken(tokenString);           // ← one call, all repos covered
+
       await this.tokenRepository.saveAccessToken(accessToken);
-      
       if (refreshToken) {
         await this.tokenRepository.saveRefreshToken(refreshToken);
       }
     } else {
       await this.tokenRepository.clearToken();
-      this._setTokenOnAllRepos(null);
+      this.apiClient.setToken(null);
     }
   }
 

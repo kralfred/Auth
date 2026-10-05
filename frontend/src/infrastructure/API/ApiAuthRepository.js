@@ -5,9 +5,10 @@ import { Token } from "../../domain/entities/Token.js";
 import { DeviceUtils } from '../UI/utils/DeviceUtils.js';
 
 export class ApiAuthRepository extends BaseApiRepository {
-  constructor(baseUrl) {
-    super(baseUrl);
-  }
+    constructor(client, deviceInfo) {
+        super(client);
+        this.deviceInfo = deviceInfo;
+    }
 
   async login(email, username, password) {
     const data = await this.request("/api/auth/login", {
@@ -16,14 +17,14 @@ export class ApiAuthRepository extends BaseApiRepository {
         email, 
         username, 
         password,
-        deviceId: DeviceUtils.getDeviceId(),
-        deviceName: DeviceUtils.getDeviceName(),
-        deviceType: DeviceUtils.getDeviceType()
+        deviceId:   this.deviceInfo.getDeviceId(),
+        deviceName: this.deviceInfo.getDeviceName(),
+        deviceType: this.deviceInfo.getDeviceType()
       })
     });
 
     const tokenString = data.token?.token || data.token || data.accessToken;
-    this.setToken(tokenString); 
+
 
     return {
       user: new User({

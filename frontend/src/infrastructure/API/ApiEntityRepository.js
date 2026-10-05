@@ -2,9 +2,7 @@
 import { BaseApiRepository } from "./BaseApiRepository.js";
 
 export class ApiEntityRepository extends BaseApiRepository {
-  constructor(baseUrl) {
-    super(baseUrl);
-  }
+
 
   async createPermissionAttribute(attributeName, entityTypeName) {
     return await this.request("/api/admin/permissions/attributes/create", {

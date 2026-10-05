@@ -26,6 +26,28 @@ public class SystemSettingRepository {
                 .optional();
     }
 
+    public Optional<String> findValueByKey(String key) {
+        return jdbcClient.sql("SELECT value FROM system_setting WHERE key = :key")
+                .param("key", key)
+                .query(String.class)
+                .optional();
+    }
+
+    public void upsert(String key, String value, String description) {
+        jdbcClient.sql("""
+            INSERT INTO system_setting (key, value, description, updated_at)
+            VALUES (:key, :value, :description, now())
+            ON CONFLICT (key) DO UPDATE
+                SET value = EXCLUDED.value,
+                    description = EXCLUDED.description,
+                    updated_at = now()
+            """)
+                .param("key", key)
+                .param("value", value)
+                .param("description", description)
+                .update();
+    }
+
     /**
      * Retrieve a configuration value parsed directly as a UUID.
      */

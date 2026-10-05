@@ -1,24 +1,24 @@
-// infrastructure/utils/DeviceUtils.js
+import { DeviceInfoProvider } from "../../../domain/irepositories/DeviceInfoProvider.js";
 
-export class DeviceUtils {
-  static getDeviceId() {
+export class DeviceUtils extends DeviceInfoProvider {
+  getDeviceId() {
     let deviceId = localStorage.getItem("device_id");
     if (!deviceId) {
-      deviceId = crypto.randomUUID(); // Native browser UUID generation
+      deviceId = crypto.randomUUID();
       localStorage.setItem("device_id", deviceId);
     }
     return deviceId;
   }
 
-  static getDeviceName() {
-    const userAgent = navigator.userAgent;
-    if (userAgent.includes("Chrome")) return "Chrome Browser";
-    if (userAgent.includes("Firefox")) return "Firefox Browser";
-    if (userAgent.includes("Safari")) return "Safari Browser";
+  getDeviceName() {
+    const ua = navigator.userAgent;
+    if (ua.includes("Chrome"))  return "Chrome Browser";
+    if (ua.includes("Firefox")) return "Firefox Browser";
+    if (ua.includes("Safari"))  return "Safari Browser";
     return "Web Client";
   }
 
-  static getDeviceType() {
+  getDeviceType() {
     return /Mobi|Android/i.test(navigator.userAgent) ? "MOBILE" : "WEB";
   }
 }

@@ -2,30 +2,35 @@
 import { Logger } from '../../infrastructure/UI/utils/Logger.js';
 
 export class AuthService {
-  constructor(userRepository, tokenService, appState) {
-    this.userRepository = userRepository;
+  constructor(authRepository, tokenService, appState) {
+    this.authRepository = authRepository; 
     this.tokenService = tokenService;
     this.appState = appState;
   }
 
   async login(email, username, password) {
     try {
-      const result = await this.userRepository.login(email, username, password);
-      await this.tokenService.applyTokensAndState(result.user, result.accessToken, result.refreshToken);
+      const result = await this.authRepository.login(email, username, password);
+      await this.tokenService.applyTokensAndState(
+        result.user,
+        result.accessToken,
+        result.refreshToken
+      );
 
       const redirectUrl = this.appState.getRedirectUrl() || "/home";
       this.appState.setRedirectUrl(null);
       window.location.hash = redirectUrl;
+      return result.user;
     } catch (err) {
-      if (err.message.includes("AUTH_001") || 
-            err.message.includes("Invalid credentials") || 
-            err.message.includes("401") || 
-            err.message.includes("403")) {
-
+      if (err.message.includes("AUTH_001") ||
+          err.message.includes("Invalid credentials") ||
+          err.message.includes("401") ||
+          err.message.includes("403")) {
         Logger.domainError("Login failed due to authentication issue.", err.message);
       } else {
         console.error("Unhandled System Error:", err);
       }
+      return null;
     }
   }
 
