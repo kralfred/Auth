@@ -1,5 +1,6 @@
 package org.example.reservation_api.repositories;
 
+import org.example.reservation_api.entities.Action;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -81,7 +82,11 @@ public class PermissionRepository {
     }
 
 
-
+    public List<Action> listAllActions() {
+        return jdbcClient.sql("SELECT id, name FROM action ORDER BY name")
+                .query(Action.class)
+                .list();
+    }
 
     public void assignPermissionToUserGroup(
             UUID nestedGroupId,

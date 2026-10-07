@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.example.reservation_api.DTO.PermissionDTOs.*;
 
+import org.example.reservation_api.entities.Action;
 import org.example.reservation_api.services.PermissionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -22,6 +24,10 @@ public class PermissionController {
 
     public PermissionController(PermissionService permissionService) {
         this.permissionService = permissionService;
+    }
+    @GetMapping("/view/actions/all")
+    public ResponseEntity<List<Action>> listAllActions() {
+        return ResponseEntity.ok(permissionService.getAllActions());
     }
 
     @PostMapping("/create")

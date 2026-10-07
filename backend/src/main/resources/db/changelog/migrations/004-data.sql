@@ -78,4 +78,12 @@ VALUES
      NULL)
 ON CONFLICT DO NOTHING;
 
+INSERT INTO action (id, name) VALUES
+                                  ('a0000000-0000-0000-0000-000000000010', 'CREATE'),
+                                  ('a0000000-0000-0000-0000-000000000011', 'VIEW'),
+                                  ('a0000000-0000-0000-0000-000000000012', 'UPDATE'),
+                                  ('a0000000-0000-0000-0000-000000000013', 'DELETE'),
+                                  ('a0000000-0000-0000-0000-000000000001', 'MANAGE')
+ON CONFLICT (id) DO NOTHING;
+
 COMMIT;

@@ -1,6 +1,7 @@
 package org.example.reservation_api.services;
 
 import org.example.reservation_api.DTO.PermissionDTOs;
+import org.example.reservation_api.entities.Action;
 import org.example.reservation_api.security.SecurityUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.reservation_api.repositories.PermissionRepository;
@@ -59,7 +60,11 @@ public class PermissionService {
         }
     }
 
+    @Transactional
+    public List<Action> getAllActions() {
 
+        return permissionRepository.listAllActions();
+    }
 
     public boolean hasPermission(UUID userId, UUID nestedGroupId, String permissionName) {
         if (permissionRepository.isGroupOwner(userId, nestedGroupId)) {

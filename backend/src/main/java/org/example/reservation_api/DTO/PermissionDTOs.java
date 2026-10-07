@@ -39,6 +39,8 @@ public sealed interface PermissionDTOs {
             }
         }
     }
+
+
     record CreateAttributeForEntityRequest(
             @NotBlank(message = "Attribute name is required") String name
     ) implements PermissionDTOs{}

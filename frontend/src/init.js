@@ -7,6 +7,7 @@ import { DpopUtils } from './infrastructure/UI/utils/DpopUtils.js';
 import { DeviceUtils } from './infrastructure/UI/utils/DeviceUtils.js';
 import { ApiUserRepository } from './infrastructure/API/ApiUserRepository.js'
 import { ApiAdminRepository } from './infrastructure/API/ApiAdminRepository.js'
+import { ApiPermissionRepository } from './infrastructure/API/ApiPermissionRepository.js'
 import { MockApiUserRepository } from '../tests/mockDb/MockApiUserRepository.js'
 import { App } from './application/state/AppState.js';
 import { CookieTokenRepository } from './infrastructure/storage/CookieTokenRepository.js';
@@ -23,6 +24,7 @@ import { ApiTokenRepository } from './infrastructure/API/ApiTokenRepository.js';
 import { EntityService } from './application/service/EntityService.js';
 import { ApiEntityRepository } from './infrastructure/API/ApiEntityRepository.js'
 import { AdminService } from './application/service/AdminService.js';
+import { PermissionService } from './application/service/PermissionService.js';
 
 
 const isDevelopment = false;
@@ -44,7 +46,7 @@ const apiTokenRepo  = new ApiTokenRepository(client);
 const apiUserRepo   = new ApiUserRepository(client);
 const apiEntityRepo = new ApiEntityRepository(client);
 const apiAdminRepo  = new ApiAdminRepository(client);
-
+const apiPermissionRepo = new ApiPermissionRepository(client);
 
 const tokenRepo = new CookieTokenRepository();
 const userRepo = isDevelopment 
@@ -55,13 +57,21 @@ const appState = new App();
 
 const tokenService = new TokenService(apiTokenRepo, tokenRepo, appState, client);
 const authService = new AuthService(apiAuthRepo, tokenService, appState);
+const permissionService = new PermissionService(apiPermissionRepo, appState);
 const entityService = new EntityService({
   userRepository: apiUserRepo,
   entityRepository: apiEntityRepo
 });
 const adminService = new AdminService(apiAdminRepo);
 
-const viewFactory = new ViewFactory(authService, appState, userRepo, entityService, adminService);
+const viewFactory = new ViewFactory(
+    authService,
+    appState,
+    userRepo,
+    entityService,
+    adminService,
+    permissionService
+);
 const appRoutes = getRoutes(viewFactory);
 
 const container = document.getElementById("app");
