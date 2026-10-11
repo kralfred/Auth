@@ -1,7 +1,7 @@
 BEGIN;
 
 -- 1. System user (environments NULL first)
-INSERT INTO "user" (id, username,  current_environment, default_group_id)
+INSERT INTO "user" (id, username,  current_environment, default_environment)
 VALUES ('00000000-0000-0000-0000-000000000000', 'system', NULL, NULL)
 ON CONFLICT (id) DO NOTHING;
 
@@ -16,7 +16,7 @@ ON CONFLICT (id) DO NOTHING;
 -- 3. Point system user at the tenant
 UPDATE "user"
 SET current_environment = '00000000-0000-0000-0000-000000000001',
-    default_group_id    = '00000000-0000-0000-0000-000000000001'
+    default_environment    = '00000000-0000-0000-0000-000000000001'
 WHERE id = '00000000-0000-0000-0000-000000000000';
 
 -- 4. Default registration fallback
@@ -47,7 +47,7 @@ VALUES ('40000000-0000-0000-0000-000000000001',
         'System Admins Group')
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO "user" (id, username, current_environment, default_group_id)
+INSERT INTO "user" (id, username, current_environment, default_environment)
 VALUES ('68e571d5-3b66-41eb-a4ef-5db6992827b7',
         'a@a',
         '00000000-0000-0000-0000-000000000001',

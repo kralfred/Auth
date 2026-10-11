@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.reservation_api.DTO.PermissionDTOs.*;
 
 import org.example.reservation_api.entities.Action;
+import org.example.reservation_api.entities.TargetableAttribute;
 import org.example.reservation_api.services.PermissionService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,6 +49,10 @@ public class PermissionController {
         permissionService.createPermission(request);
 
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+    @GetMapping("/view/attributes/all")
+    public ResponseEntity<List<TargetableAttribute>> listAllAttributes() {
+        return ResponseEntity.ok(permissionService.getListOfPermittedAttributes());
     }
 
 

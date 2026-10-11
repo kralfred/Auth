@@ -39,8 +39,8 @@ public class UserRepository extends AbstractJdbcRepository<User>{
     }
 
     public Optional<UUID> checkUsersDefaultEnvironment(UUID userId) {
-        return jdbcClient.sql("SELECT default_group_id FROM \"user\" WHERE id = :userId")
-                .param("userId", userId)
+        return jdbcClient.sql("SELECT default_environment FROM \"user\" WHERE id = ?")
+                .param(userId)
                 .query(UUID.class)
                 .optional();
     }

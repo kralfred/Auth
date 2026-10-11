@@ -1,6 +1,7 @@
 package org.example.reservation_api.repositories;
 
 import org.example.reservation_api.entities.Action;
+import org.example.reservation_api.entities.TargetableAttribute;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
@@ -26,6 +27,14 @@ public class PermissionRepository {
         return jdbcClient.sql(sql)
                 .param(permissionId)
                 .query(String.class)
+                .list();
+    }
+    public List<TargetableAttribute> getAllowedTargetableAttributes(UUID nestedGroupId){
+        String sql = "SELECT * FROM targetable_attribute ta JOIN group_attribute_grant gat ON ta.id = gat.targetable_attribute_id " +
+                "WHERE gat.nested_group_id = :nestedGroupId";
+        return jdbcClient.sql(sql)
+                .param(nestedGroupId)
+                .query(TargetableAttribute.class)
                 .list();
     }
 

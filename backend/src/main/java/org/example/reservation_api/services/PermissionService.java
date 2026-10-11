@@ -2,6 +2,9 @@ package org.example.reservation_api.services;
 
 import org.example.reservation_api.DTO.PermissionDTOs;
 import org.example.reservation_api.entities.Action;
+import org.example.reservation_api.entities.Permission;
+import org.example.reservation_api.entities.TargetableAttribute;
+import org.example.reservation_api.security.CurrentEnvironmentContext;
 import org.example.reservation_api.security.SecurityUtils;
 import org.springframework.transaction.annotation.Transactional;
 import org.example.reservation_api.repositories.PermissionRepository;
@@ -22,6 +25,12 @@ public class PermissionService {
     @Transactional
     public List<String> getPermissionAttributes(UUID targetNestedGroupId, UUID targetPermissionId){
        return permissionRepository.getPermissionTargetAttributes(targetPermissionId);
+    }
+
+    @Transactional
+    public List<TargetableAttribute> getListOfPermittedAttributes(){
+        UUID currentGroup = CurrentEnvironmentContext.get();
+        return permissionRepository.getAllowedTargetableAttributes(currentGroup);
     }
 
     @Transactional

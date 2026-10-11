@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS "user" (
                         "id"                  UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                         "username"            VARCHAR(100) NOT NULL,
                         "current_environment" UUID,
-                        "default_group_id" UUID
+                        "default_environment" UUID
 );
 
 CREATE TABLE IF NOT EXISTS "user_info" (
