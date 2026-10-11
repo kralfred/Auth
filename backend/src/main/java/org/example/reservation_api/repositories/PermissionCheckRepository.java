@@ -3,6 +3,7 @@ package org.example.reservation_api.repositories;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.UUID;
 
 @Repository
@@ -38,6 +39,32 @@ public class PermissionCheckRepository {
                 .query(Boolean.class)
                 .single();
     }
+    public List<String> getListOfSystemPermissions(UUID userId, UUID systemNestedGroupId) {
+        String sql = """
+        WITH user_groups AS (
+            SELECT ug.id
+            FROM group_member gm
+            JOIN user_group ug ON ug.id = gm.group_id
+            WHERE gm.user_id         = ?
+              AND gm.nested_group_id = ?
+        )
+        SELECT p.name
+        FROM user_groups ug
+        JOIN group_permission gp
+          ON gp.owner_users_group = ug.id
+         AND gp.nested_group_id   = ?
+        JOIN permission p ON p.id = gp.permission_id
+        ORDER BY p.name;
+        """;
+
+        return jdbcClient.sql(sql)
+                .param(userId)
+                .param(systemNestedGroupId)
+                .param(systemNestedGroupId)
+                .query(String.class)
+                .list();
+    }
+
     public boolean hasSystemPermission(UUID userId, String permissionName) {
         String sql = """
             SELECT EXISTS (

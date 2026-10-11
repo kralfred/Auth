@@ -22,6 +22,10 @@ public final class SecurityUtils {
         // Private constructor to prevent instantiation
     }
 
+    public static UUID getAdminEnvironment(){
+        return UUID.fromString("00000000-0000-0000-0000-000000000001");
+    }
+
     public static UUID getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null || !auth.isAuthenticated()) {

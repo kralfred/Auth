@@ -37,6 +37,13 @@ public class PermissionAdminService {
             throw new AccessDeniedException("Access denied: Global permission administration privileges required.");
         }
     }
+    @Transactional
+    public List<String> getSystemPermissionList(UUID userId){
+        return permissionCheckRepository.getListOfSystemPermissions(
+                userId,
+                SecurityUtils.getAdminEnvironment()
+        );
+    }
 
     @Transactional
     public void grantAttributesToNestedGroup(List<UUID> attributes, UUID targetNestedGroup){

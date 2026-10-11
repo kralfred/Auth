@@ -42,8 +42,17 @@ public sealed interface PermissionDTOs {
 
 
     record CreateAttributeForEntityRequest(
-            @NotBlank(message = "Attribute name is required") String name
+            @NotBlank(message = "Attribute name is required") String name,
+            @NotBlank()UUID entityType
     ) implements PermissionDTOs{}
+
+    record simpleCreateResponse(
+            UUID newId
+    ){}
+    record CreateAttributeForEntityResponse(
+            UUID newId
+    )
+            implements PermissionDTOs{}
     record EntityAttribute(
             @NotBlank UUID id,
             String name

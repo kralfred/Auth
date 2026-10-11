@@ -10,6 +10,7 @@ public final class CurrentEnvironmentContext {
         // Private constructor to prevent instantiation
     }
 
+
     public static void set(UUID nestedGroupId) {
         CURRENT_ENV.set(nestedGroupId);
     }

@@ -83,6 +83,40 @@ public class PermissionAdminRepository {
                 .query(EntityType.class).list();
     }
 
+    public boolean hasSystemPermission(UUID userId, UUID nestedGroupId) {
+        return jdbcClient.sql("""
+            SELECT EXISTS (
+                -- either: user holds a named system permission
+                SELECT 1
+                FROM group_member gm
+                JOIN group_permission gp
+                  ON gp.owner_users_group = gm.group_id
+                 AND gp.nested_group_id   = gm.nested_group_id
+                JOIN permission p ON p.id = gp.permission_id
+                WHERE gm.user_id         = ?
+                  AND gm.nested_group_id = ?
+                  AND p.name IN ('MANAGE_SYSTEM_PERMISSIONS')
+            )
+            OR EXISTS (
+                -- or: user holds any permission that targets the "permission" entity type
+                SELECT 1
+                FROM group_member gm
+                JOIN group_permission gp
+                  ON gp.owner_users_group = gm.group_id
+                 AND gp.nested_group_id   = gm.nested_group_id
+                JOIN permission_attribute pa ON pa.permission_id = gp.permission_id
+                JOIN targetable_attribute ta ON ta.id = pa.targetable_attribute_id
+                JOIN entity_type et          ON et.id = ta.entity_type_id
+                WHERE gm.user_id         = ?
+                  AND gm.nested_group_id = ?
+                  AND et.name            = 'permission'
+            )
+            """)
+                .param(userId).param(nestedGroupId)
+                .param(userId).param(nestedGroupId)
+                .query(Boolean.class)
+                .single();
+    }
 
     public void configurePermissionAttributeRule(
             UUID nestedGroupId,

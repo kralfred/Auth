@@ -29,6 +29,7 @@ public class MyCustomBouncer {
     private final PasswordEncoder passwordEncoder;
     private final PermissionRepository permissionRepository;
     private final PermissionService permissionService;
+    private final PermissionAdminService permissionAdminService;
     private final SessionService sessionService;
     private final PermissionCheckRepository permissionCheckRepository;
     private final DpopService dpopService; // Injected DPoP parsing/validation service
@@ -84,6 +85,8 @@ public class MyCustomBouncer {
         } else {
             log.error("pageAccess not empty, first access element: " + pageAccess.getFirst());
         }
+        assert pageAccess != null;
+        pageAccess.addAll(permissionAdminService.getSystemPermissionList(credentials.userId()));
 
         String accessToken = jwtService.generateAccessToken(
                 request.username(),

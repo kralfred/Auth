@@ -21,7 +21,7 @@ import java.util.UUID;
 @RequestMapping("/api/admin/permissions")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("@myCustomBouncer.canSystem('MANAGE_SYSTEM_PERMISSIONS')")
+@PreAuthorize("@myCustomBouncer.hasSystemPermission('MANAGE_SYSTEM_PERMISSIONS')")
 public class PermissionAdminController {
 
     private final PermissionAdminService adminService;
@@ -40,6 +40,11 @@ public class PermissionAdminController {
                 return ResponseEntity.ok(adminService.createEntity(name));
     }
 
+    @PostMapping("/attribute/create")
+    public ResponseEntity<simpleCreateResponse> createAttribute( @Valid @RequestBody CreateAttributeForEntityRequest request){
+        String name = request.name();
+        return ResponseEntity.ok(new simpleCreateResponse(adminService.createNewTargetableAttribute(request.entityType(), name)));
+    }
 
     @GetMapping("/view/entities/all")
     public ResponseEntity<List<EntityType>> listAllEntities(
