@@ -4,6 +4,7 @@ package org.example.reservation_api.security;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.reservation_api.DTO.AuthDTOs.*;
+import org.example.reservation_api.DTO.GroupDTOs.*;
 import org.example.reservation_api.projections.UserCredentialsProjection;
 import org.example.reservation_api.repositories.PermissionCheckRepository;
 import org.example.reservation_api.repositories.PermissionRepository;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.net.UnknownHostException;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -32,15 +34,33 @@ public class MyCustomBouncer {
     private final PermissionAdminService permissionAdminService;
     private final SessionService sessionService;
     private final PermissionCheckRepository permissionCheckRepository;
-    private final DpopService dpopService; // Injected DPoP parsing/validation service
+    private final DpopService dpopService;
     private final SystemSettingRepository systemSettingRepository;
     private final UserService userService;
+    private final GroupService groupService;
+
+
 
     public boolean can(UUID userId, UUID nestedGroupId, String permission) {
         if (userId == null || nestedGroupId == null) {
             return false;
         }
         return permissionService.hasPermission(userId, nestedGroupId, permission);
+    }
+
+    public boolean hasSystemPermissions(){
+        UUID userId = SecurityUtils.getCurrentUserId();
+        if (userId == null) return false;
+        return permissionCheckRepository.hasSystemPermissions(userId, SecurityUtils.getAdminEnvironment());
+    }
+
+
+    public boolean canTargetAttribute(UUID userId, UUID groupId, UUID attributeId) {
+        // Fast path: owner of the tenant
+        if (permissionCheckRepository.isGroupOwner(groupId, userId)) {
+            return true;
+        }
+       return false;
     }
 
     public boolean hasSystemPermission(String permission) {
@@ -72,36 +92,48 @@ public class MyCustomBouncer {
                 request.deviceId(),
                 dpopJkt
         );
-        UUID currentGroupId = CurrentEnvironmentContext.get();
-        if (currentGroupId == null) {
 
+        UUID currentGroupId = userService.getCurrentEnvironment(credentials.userId());
+        if (currentGroupId == null) {
             currentGroupId = userService.getDefaultEnvironment(credentials.userId());
-            CurrentEnvironmentContext.set(currentGroupId);
+
         }
+
+        CurrentEnvironmentContext.set(currentGroupId);
+        NestedGroupConfiguration nestedGroupConfig = groupService.getNestedGroupConfiguration(currentGroupId);
         List<String> pageAccess = permissionRepository.findUserEntityAccess(credentials.userId(), currentGroupId);
-        long expiration = 1200;
+
+        long accessTokenExpiration = nestedGroupConfig.accessTokenTime();
+        long refreshTokenExpiration = nestedGroupConfig.refreshTokenTime();
+
         if (pageAccess == null || pageAccess.isEmpty()) {
             log.error("pageAccess is empty for user: " + credentials.userId());
         } else {
             log.error("pageAccess not empty, first access element: " + pageAccess.getFirst());
         }
+
         assert pageAccess != null;
         pageAccess.addAll(permissionAdminService.getSystemPermissionList(credentials.userId()));
 
+        String currentGroupName = groupService.getCurrentEnvironment(currentGroupId);
+
         String accessToken = jwtService.generateAccessToken(
                 request.username(),
+                currentGroupName,
                 credentials.userId(),
                 currentGroupId,
                 pageAccess,
                 dpopJkt
         );
+        log.info("Finito");
         return new LoginResponse(
                 accessToken,
-                expiration,
+                accessTokenExpiration,
                 sessionResult.rawRefreshToken(),
-                5 * 60 * 1000,
+                refreshTokenExpiration,
                 credentials.userId(),
                 credentials.username(),
+                groupService.getGroupInfo(currentGroupId).orElseThrow(),
                 pageAccess
         );
     }

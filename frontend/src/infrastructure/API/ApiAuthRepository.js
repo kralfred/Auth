@@ -2,6 +2,7 @@
 import { BaseApiRepository } from "./BaseApiRepository.js";
 import { User } from "../../domain/entities/User.js";
 import { Token } from "../../domain/entities/Token.js";
+import { Group } from "../../domain/entities/Group.js";
 import { DeviceUtils } from '../UI/utils/DeviceUtils.js';
 
 export class ApiAuthRepository extends BaseApiRepository {
@@ -33,7 +34,8 @@ export class ApiAuthRepository extends BaseApiRepository {
         permissions: data.permissions || data.pageAccess
       }),
       accessToken: new Token(tokenString, data.token?.expiresAt || data.expiresAt || data.expiration || data.expiresIn),
-      refreshToken: new Token(data.refreshToken, data.refreshTokenExpiration)
+      refreshToken: new Token(data.refreshToken, data.refreshTokenExpiration),
+      group: new Group(data.groupSettings)
     };
   }
 
@@ -43,4 +45,21 @@ export class ApiAuthRepository extends BaseApiRepository {
       body: JSON.stringify(registrationData)
     });
   }
+
+  async switchEnvironment(groupId) {
+    const data = await this.request("/api/auth/switch-environment", {
+        method: "POST",
+        body: JSON.stringify({ nestedGroupId: groupId })
+    });
+    return {
+        accessToken: data.accessToken,
+        expiresIn: data.expiresIn,
+        currentGroup: new Group(data.currentGroup)
+    };
+}
+
+async listEnvironments() {
+    const data = await this.request("/api/auth/environments", { method: "GET" });
+    return data.map(g => new Group(g));
+}
 }

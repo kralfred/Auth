@@ -142,11 +142,6 @@ CREATE TABLE IF NOT EXISTS "group_invite_target" (
                                        "is_primary"      BOOLEAN NOT NULL DEFAULT FALSE,
                                        PRIMARY KEY ("invite_id", "nested_group_id")
 );
-
-
--- =========================================================================
--- ABAC CATALOG (SYSTEM ADMIN)
--- =========================================================================
 CREATE TABLE IF NOT EXISTS "action" (
                           "id"   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                           "name" VARCHAR(100) NOT NULL UNIQUE
@@ -163,24 +158,16 @@ CREATE TABLE IF NOT EXISTS "targetable_attribute" (
                                         "name"           VARCHAR(100) NOT NULL,
                                         UNIQUE ("entity_type_id", "name")
 );
-
 CREATE INDEX "idx_targetable_attribute_entity"
     ON "targetable_attribute" ("entity_type_id");
 
-
--- =========================================================================
--- PERMISSIONS (GLOBAL TEMPLATES)
--- =========================================================================
 CREATE TABLE IF NOT EXISTS "permission" (
                               "id"           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                               "name"         VARCHAR(50) NOT NULL,
-                              "action_id"    UUID NOT NULL REFERENCES "action"("id"),
-                              "is_composite" BOOLEAN NOT NULL DEFAULT FALSE,
-                              UNIQUE ("action_id", "name")
+                              "is_composite" BOOLEAN NOT NULL DEFAULT FALSE
+
 );
 
--- Which attributes this template touches. No tenant column here — templates
--- are global and reusable across tenants.
 CREATE TABLE IF NOT EXISTS "permission_attribute" (
                                         "permission_id"           UUID NOT NULL REFERENCES "permission"("id")           ON DELETE CASCADE,
                                         "targetable_attribute_id" UUID NOT NULL REFERENCES "targetable_attribute"("id") ON DELETE CASCADE,
@@ -193,14 +180,11 @@ CREATE INDEX "idx_permission_attribute_attr"
     ON "permission_attribute" ("targetable_attribute_id");
 
 
--- =========================================================================
--- TENANT CEILING (SYSTEM ADMIN GRANTS)
--- =========================================================================
--- Which attributes a tenant is allowed to target. This is the "ceiling".
 CREATE TABLE IF NOT EXISTS "group_attribute_grant" (
-                                         "nested_group_id"         UUID NOT NULL REFERENCES "nested_group"("id")         ON DELETE CASCADE,
-                                         "targetable_attribute_id" UUID NOT NULL REFERENCES "targetable_attribute"("id") ON DELETE CASCADE,
-                                         PRIMARY KEY ("nested_group_id", "targetable_attribute_id")
+                                                       nested_group_id         UUID NOT NULL REFERENCES nested_group(id) ON DELETE CASCADE,
+                                                       targetable_attribute_id UUID NOT NULL REFERENCES targetable_attribute(id) ON DELETE CASCADE,
+                                                       action_id               UUID NOT NULL REFERENCES action(id) ON DELETE CASCADE,
+                                                       PRIMARY KEY (nested_group_id, targetable_attribute_id, action_id)
 );
 
 CREATE INDEX "idx_group_attribute_grant_attr"
@@ -216,14 +200,10 @@ CREATE TABLE IF NOT EXISTS "group_permission" (
                                     "permission_id"     UUID NOT NULL REFERENCES "permission"("id")     ON DELETE CASCADE,
                                     "owner_users_group" UUID NOT NULL,
                                     "target_users_group" UUID,
-    -- Both groups must belong to the same tenant.
                                     FOREIGN KEY ("owner_users_group", "nested_group_id")
                                         REFERENCES "user_group" ("id", "nested_group_id") ON DELETE CASCADE,
                                     FOREIGN KEY ("target_users_group", "nested_group_id")
                                         REFERENCES "user_group" ("id", "nested_group_id") ON DELETE CASCADE,
-    -- NULLS NOT DISTINCT so rows with a NULL target are also de-duplicated.
-    -- Requires PostgreSQL 15+. On older versions, replace with a sentinel UUID
-    -- or a partial unique index for the NULL case.
                                     UNIQUE NULLS NOT DISTINCT
                                         ("nested_group_id", "owner_users_group", "target_users_group", "permission_id")
 );
@@ -231,10 +211,6 @@ CREATE TABLE IF NOT EXISTS "group_permission" (
 CREATE INDEX "idx_group_permission_lookup"
     ON "group_permission" ("nested_group_id", "owner_users_group", "permission_id");
 
-
--- =========================================================================
--- LOGGING
--- =========================================================================
 CREATE TABLE IF NOT EXISTS "api_log" (
                            "id"              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                            "nested_group_id" UUID REFERENCES "nested_group"("id") ON DELETE SET NULL,
@@ -257,9 +233,6 @@ CREATE INDEX "idx_api_log_error_details"
     ON "api_log" USING GIN ("error_details");
 
 
--- =========================================================================
--- LATE FKs (users point at nested_group, so added after nested_group exists)
--- =========================================================================
 ALTER TABLE "user"
     ADD CONSTRAINT "user_current_environment_fk"
         FOREIGN KEY ("current_environment") REFERENCES "nested_group"("id") ON DELETE SET NULL;

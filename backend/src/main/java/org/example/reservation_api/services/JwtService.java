@@ -45,10 +45,12 @@ public class JwtService {
     private long jwtExpiration;
 
 
-    public String generateAccessToken(String username,UUID userId, UUID nestedGroupId, List<String> permissions, String dpop_jkt) {
+    public String generateAccessToken(String username, String groupName,
+                                      UUID userId, UUID nestedGroupId, List<String> permissions, String dpop_jkt) {
         return Jwts.builder()
                 .subject(username)
                 .claim("userId", userId.toString())
+                .claim("current_group_name", groupName)
                 .claim("env_id", nestedGroupId.toString())  // Read by JwtAuthenticationFilter
                 .claim("permissions", permissions)          // Used for authority mapping
                 .claim("dpop_jkt", dpop_jkt)

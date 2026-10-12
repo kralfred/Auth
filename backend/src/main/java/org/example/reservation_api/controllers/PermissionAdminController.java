@@ -34,16 +34,16 @@ public class PermissionAdminController {
         return ResponseEntity.ok(Map.of("message", "Permission attribute rule updated successfully"));
     }
     @PostMapping("/entity/create")
-    public ResponseEntity<CreateEntityResponse> createEntity( @Valid @RequestBody CreateEntityRequest request){
+    public ResponseEntity<SimpleCreateResponse> createEntity( @Valid @RequestBody CreateEntityRequest request){
                 String name = request.name();
 
                 return ResponseEntity.ok(adminService.createEntity(name));
     }
 
     @PostMapping("/attribute/create")
-    public ResponseEntity<simpleCreateResponse> createAttribute( @Valid @RequestBody CreateAttributeForEntityRequest request){
+    public ResponseEntity<SimpleCreateResponse> createAttribute( @Valid @RequestBody CreateAttributeForEntityRequest request){
         String name = request.name();
-        return ResponseEntity.ok(new simpleCreateResponse(adminService.createNewTargetableAttribute(request.entityType(), name)));
+        return ResponseEntity.ok(new SimpleCreateResponse(adminService.createNewTargetableAttribute(request.entityType(), name)));
     }
 
     @GetMapping("/view/entities/all")
@@ -57,5 +57,10 @@ public class PermissionAdminController {
     public ResponseEntity<List<EntityAttribute>> getAttributesByEntity(@PathVariable UUID entityId) {
         List<EntityAttribute> attributes = adminService.getAttributesOfEntity(entityId);
         return ResponseEntity.ok(attributes);
+    }
+    @PostMapping("/attribute/appendTo/nestedGroup")
+    @PreAuthorize("@myCustomBouncer.hasSystemPermission('CAN_GRANT_ATTRIBUTES')")
+    public ResponseEntity<String> append(@Valid @RequestBody AppendAttributeToNestedGroupRequest request){
+        return ResponseEntity.ok("Success, " + adminService.grantAttributesToNestedGroup(request) + " attributes have been updated");
     }
 }

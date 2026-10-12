@@ -1,3 +1,4 @@
+SELECT * FROM nested_group_configuration WHERE nested_group_id = '00000000-0000-0000-0000-000000000001';
 BEGIN;
 
 -- 1. System user (environments NULL first)
@@ -31,12 +32,12 @@ INSERT INTO action (id, name)
 VALUES ('a0000000-0000-0000-0000-000000000001', 'MANAGE')
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO permission (id, name, action_id, is_composite)
+INSERT INTO permission (id, name, is_composite)
 VALUES ('10000000-0000-0000-0000-000000000001',
         'MANAGE_SYSTEM_PERMISSIONS',
-        'a0000000-0000-0000-0000-000000000001',
         false)
 ON CONFLICT (id) DO NOTHING;
+
 
 
 

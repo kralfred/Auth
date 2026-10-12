@@ -65,6 +65,26 @@ public class PermissionCheckRepository {
                 .list();
     }
 
+    public boolean hasSystemPermissions(UUID userId, UUID systemGroupId){
+        String sql = """
+            SELECT EXISTS (
+                SELECT 1
+                FROM group_member gm
+                JOIN nested_group ng
+                  ON ng.id = gm.group_id
+                WHERE gm.user_id = :userId
+                  AND ng.id     = :systemGroupId
+            );
+        """;
+        return Boolean.TRUE.equals(
+                jdbcClient.sql(sql)
+                        .param("userId", userId)
+                        .param("systemGroupId", systemGroupId)
+                        .query(Boolean.class)
+                        .single()
+        );
+    }
+
     public boolean hasSystemPermission(UUID userId, String permissionName) {
         String sql = """
             SELECT EXISTS (
@@ -87,5 +107,42 @@ public class PermissionCheckRepository {
                         .query(Boolean.class)
                         .single()
         );
+    }
+
+    public boolean isGroupOwner(UUID groupId, UUID userId) {
+        return jdbcClient.sql("""
+            SELECT EXISTS (
+                SELECT 1 FROM nested_group
+                WHERE id = ? AND owner = ?
+            )
+            """)
+                .param(groupId)
+                .param(userId)
+                .query(Boolean.class)
+                .single();
+    }
+
+    public boolean ownerCanTargetAttribute(UUID groupId, UUID userId, UUID attributeId) {
+        return jdbcClient.sql("""
+            SELECT EXISTS (
+                SELECT 1
+                FROM nested_group ng
+                JOIN targetable_attribute ta ON ta.id = ?
+                WHERE ng.id = ?
+                  AND ng.owner = ?
+                  AND (
+                         EXISTS (
+                            SELECT 1 FROM group_attribute_grant gag
+                            WHERE gag.nested_group_id = ng.id
+                              AND gag.targetable_attribute_id = ta.id
+                        )
+                  )
+            )
+            """)
+                .param(attributeId)
+                .param(groupId)
+                .param(userId)
+                .query(Boolean.class)
+                .single();
     }
 }

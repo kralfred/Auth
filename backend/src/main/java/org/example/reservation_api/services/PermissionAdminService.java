@@ -46,9 +46,9 @@ public class PermissionAdminService {
     }
 
     @Transactional
-    public void grantAttributesToNestedGroup(List<UUID> attributes, UUID targetNestedGroup){
+    public int grantAttributesToNestedGroup(AppendAttributeToNestedGroupRequest request){
         enforceGlobalAdminAccess();
-        adminRepository.grantAttributesToGroup(targetNestedGroup, attributes);
+        return adminRepository.grantAttributesToGroup(request.nestedGroupId(), request.attributeIds());
     }
 
 
@@ -70,14 +70,13 @@ public class PermissionAdminService {
        return adminRepository.createAttribute(entityType, attributeName);
     }
 
+
     @Transactional
-    public CreateEntityResponse createEntity(String name) {
+    public SimpleCreateResponse createEntity(String name) {
         enforceGlobalAdminAccess(); // Global check added
         UUID newEntityId = adminRepository.createEntity(name);
-        CreateEntityResponse response = new CreateEntityResponse(
-                newEntityId,
-                name,
-                "Successfully created with ID: "
+        SimpleCreateResponse response = new SimpleCreateResponse(
+                newEntityId
         );
         return response;
     }

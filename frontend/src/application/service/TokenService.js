@@ -7,17 +7,14 @@ export class TokenService {
     this.apiClient = apiClient;           // for propagating the token
   }
 
-  // Helper to set token across all registered API repositories
-  _setTokenOnAllRepos(tokenString) {
-    this.repositories.forEach(repo => {
-      if (repo && typeof repo.setToken === 'function') {
-        repo.setToken(tokenString);
-      }
-    });
-  }
 
-   async applyTokensAndState(userObject, accessToken, refreshToken) {
+
+   async applyTokensAndState(userObject, accessToken, refreshToken, currentGroup) {
     this.appState.setUser(userObject);
+
+    if (currentGroup) {
+        this.appState.setCurrentGroup(currentGroup);
+    }
 
     if (accessToken) {
       const tokenString = typeof accessToken === 'object' ? accessToken.value : accessToken;
@@ -31,6 +28,7 @@ export class TokenService {
     } else {
       await this.tokenRepository.clearToken();
       this.apiClient.setToken(null);
+      this.appState.setCurrentGroup(null);
     }
   }
 

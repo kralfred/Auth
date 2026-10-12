@@ -3,6 +3,7 @@ package org.example.reservation_api.DTO;
 import io.jsonwebtoken.Claims;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
+import org.example.reservation_api.DTO.GroupDTOs.*;
 
 import java.util.List;
 import java.util.UUID;
@@ -23,10 +24,11 @@ public sealed interface AuthDTOs {
             long refreshTokenExpiration,
             UUID userId,
             String username,
+            Group groupSettings,
             List<String> permissions
     ) implements AuthDTOs {
-        public LoginResponse(String accessToken, long expiresIn, String refreshToken,long refreshTokenExpiration, UUID userId, String username, List<String> permissions) {
-            this(accessToken, "Bearer", expiresIn, refreshToken,refreshTokenExpiration, userId, username, permissions);
+        public LoginResponse(String accessToken, long expiresIn, String refreshToken,long refreshTokenExpiration, UUID userId, String username, Group groupSettings, List<String> permissions) {
+            this(accessToken, "Bearer", expiresIn, refreshToken,refreshTokenExpiration, userId, username,groupSettings, permissions);
         }
     }
     record RegistrationRequest(

@@ -1,6 +1,9 @@
 package org.example.reservation_api.services;
 
+import lombok.extern.slf4j.Slf4j;
+import org.example.reservation_api.DTO.GroupDTOs.*;
 import org.example.reservation_api.messages.AccessDeniedException;
+import org.example.reservation_api.security.CurrentEnvironmentContext;
 import org.example.reservation_api.security.SecurityUtils;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -8,12 +11,10 @@ import org.example.reservation_api.entities.*;
 import org.example.reservation_api.repositories.*;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.UUID;
+import java.util.*;
 
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class GroupService {
 
@@ -24,39 +25,50 @@ public class GroupService {
     private final PermissionCheckRepository permissionCheckRepository;
 
     @Transactional
-    public UUID createNestedGroup(String groupName, UUID parentGroupId, UUID owner, List<UUID> initialMemberIds) {
-        UUID currentUserId = SecurityUtils.getCurrentUserId();
+    public UUID createNestedGroup(String groupName, UUID parentGroupId,
+                                  Optional<UUID> owner, List<UUID> initialMemberIds) {
+        UUID ownerId = owner.orElse(SecurityUtils.getCurrentUserId());
 
-        // 1. Permission Check: If creating under a parent group, verify user has permission in that scope
-        if (parentGroupId != null) {
-            boolean canCreateSubgroup = permissionCheckRepository.hasPermission(
-                    parentGroupId,
-                    currentUserId,
-                    "CREATE_SUBGROUP"
-            );
-            if (!canCreateSubgroup) {
-                throw new AccessDeniedException("Access denied: Cannot create subgroup under group " + parentGroupId);
-            }
-        }
+        UUID newNestedGroupId   = UUID.randomUUID();
+        UUID defaultUserGroupId = UUID.randomUUID();
 
-        // 2. Resolve default values & attribute filtering
-        UUID ownerId = Objects.requireNonNullElse(owner, currentUserId);
+        // 1. The tenant itself
+        groupRepository.createNestedGroup(newNestedGroupId, groupName, parentGroupId, ownerId);
 
-        List<UUID> members = (initialMemberIds != null && !initialMemberIds.isEmpty())
+        // 2. Default user_group inside it
+        groupRepository.createUserGroup(defaultUserGroupId, newNestedGroupId, "Default");
+
+        // 3. Config row — this is the piece that was missing
+        groupRepository.createDefaultConfiguration(newNestedGroupId, defaultUserGroupId);
+
+        // 4. Members go into the default user_group, not the nested_group
+        List<UUID> members = initialMemberIds != null
                 ? new ArrayList<>(initialMemberIds)
                 : new ArrayList<>();
+        if (!members.contains(ownerId)) members.add(ownerId);
 
-        if (!members.contains(ownerId)) {
-            members.add(ownerId);
-        }
+        groupRepository.addMembersToUserGroup(defaultUserGroupId, members);
 
-        UUID newGroupId = UUID.randomUUID();
+        return newNestedGroupId;
+    }
 
-        // 3. Database Operations
-        groupRepository.createNestedGroup(newGroupId, groupName, parentGroupId, ownerId);
-        groupRepository.addMembersToUserGroup(newGroupId, members);
+    @Transactional
+    public void updateNestedGroupConfiguration(NestedGroupConfiguration updateRequest){
+      groupRepository.updateConfiguration(CurrentEnvironmentContext.get(), updateRequest);
+    }
 
-        return newGroupId;
+    @Transactional
+    public String getCurrentEnvironment(UUID currentGroupId){
+       return groupRepository.findCurrentNestedGroupName(currentGroupId);
+    }
+    @Transactional
+    public NestedGroupConfiguration getNestedGroupConfiguration(UUID targetGroupId) {
+        return groupRepository.findNestedGroupConfiguration(targetGroupId)
+                .orElseGet(() -> NestedGroupConfiguration.defaultsFor(targetGroupId));
+    }
+
+    public Optional<Group> getGroupInfo(UUID currentGroupId){
+        return groupRepository.findById(currentGroupId);
     }
 
     @Transactional

@@ -44,6 +44,12 @@ public class UserRepository extends AbstractJdbcRepository<User>{
                 .query(UUID.class)
                 .optional();
     }
+    public Optional<UUID> checkUsersCurrentEnvironment(UUID userId) {
+        return jdbcClient.sql("SELECT current_environment FROM \"user\" WHERE id = ?")
+                .param(userId)
+                .query(UUID.class)
+                .optional();
+    }
 
 
     public Optional<UserCredentialsProjection> findCredentialsByUsername(String username) {

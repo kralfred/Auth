@@ -51,6 +51,14 @@ public class UserService extends BaseService<User, UserRepository> {
                 ));
     }
 
+    @Transactional(readOnly = true)
+    public UUID getCurrentEnvironment(UUID id) {
+        return userRepository.checkUsersCurrentEnvironment(id)
+                .orElseThrow(() -> new IllegalStateException(
+                        "No current environment ID found for user: " + id
+                ));
+    }
+
     @Transactional
     public RegistrationResponse tryRegister(RegistrationRequest request) {
 

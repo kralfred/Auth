@@ -2,8 +2,9 @@ package org.example.reservation_api.controllers;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.example.reservation_api.DTO.GroupDtos.*;
+import org.example.reservation_api.DTO.GroupDTOs.*;
 import org.example.reservation_api.entities.User;
+import org.example.reservation_api.security.SecurityUtils;
 import org.example.reservation_api.services.GroupService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -20,7 +21,7 @@ public class GroupController {
 
     private GroupService groupService;
 
-    @PostMapping("/assign-role")
+    @PostMapping("/assign-roleee")
     public ResponseEntity<Void> assignRole(
             @PathVariable UUID groupId,
             Authentication authentication) {
@@ -47,7 +48,7 @@ public class GroupController {
     @PostMapping("create")
     public ResponseEntity<String> createUserGroup(@RequestBody @Valid CreateUserGroupRequest request){
         String name = (request.name() == null) ? "Default" : request.name();
-        groupService.createUserGroup(name, request.nestedGroupId(), request.initialMemberIds());
+        groupService.createUserGroup(name, request.nestedGroupId(), request.initialMembersIds());
         return ResponseEntity
                 .created(URI.create("/api/groups/"))
                 .body(name);

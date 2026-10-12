@@ -2,6 +2,7 @@ package org.example.reservation_api.DTO;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import org.aspectj.weaver.ast.Not;
 
 import java.util.List;
 import java.util.UUID;
@@ -39,20 +40,20 @@ public sealed interface PermissionDTOs {
             }
         }
     }
-
+    record AppendAttributeToNestedGroupRequest(
+            @NotNull()UUID nestedGroupId,
+            @NotNull()List<UUID> attributeIds
+    )
+            implements PermissionDTOs{}
 
     record CreateAttributeForEntityRequest(
             @NotBlank(message = "Attribute name is required") String name,
             @NotNull()UUID entityType
     ) implements PermissionDTOs{}
 
-    record simpleCreateResponse(
+    record SimpleCreateResponse(
             UUID newId
     ){}
-    record CreateAttributeForEntityResponse(
-            UUID newId
-    )
-            implements PermissionDTOs{}
     record EntityAttribute(
             @NotBlank UUID id,
             String name
@@ -60,11 +61,6 @@ public sealed interface PermissionDTOs {
 
      record CreateEntityRequest(
              @NotBlank(message = "Entity name is required") String name
-    ) implements PermissionDTOs {}
-    record CreateEntityResponse(
-            UUID id,
-            String name,
-            String message
     ) implements PermissionDTOs {}
 
 }

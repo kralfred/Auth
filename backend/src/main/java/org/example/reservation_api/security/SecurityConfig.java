@@ -73,7 +73,8 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/swagger",
                                 "/favicon.ico",
-                                "/error"
+                                "/error",
+                                "/api/testing/*"
                         ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/users").hasAnyAuthority("view_users", "ROLE_ADMIN", "ADMIN")
                         .requestMatchers(HttpMethod.POST, "/api/users/*/modify").hasAuthority("can_modify_users")

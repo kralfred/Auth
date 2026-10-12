@@ -14,7 +14,8 @@ export class AuthService {
       await this.tokenService.applyTokensAndState(
         result.user,
         result.accessToken,
-        result.refreshToken
+        result.refreshToken,
+        result.group
       );
 
       const redirectUrl = this.appState.getRedirectUrl() || "/home";
@@ -33,6 +34,14 @@ export class AuthService {
       return null;
     }
   }
+
+  async switchEnvironment(groupId) {
+    const result = await this.authRepository.switchEnvironment(groupId);
+    this.apiClient.setToken(result.accessToken);
+    await this.tokenRepository.saveAccessToken(new Token(result.accessToken, result.expiresIn));
+    this.appState.setCurrentGroup(result.currentGroup);
+    return result.currentGroup;
+}
 
   async restoreSessionOrRedirect() {
     const restored = await this.tokenService.trySilentRefresh();

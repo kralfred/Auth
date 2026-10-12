@@ -12,11 +12,18 @@ export class App {
     this.redirectUrl = null;
     this.state = {
       user: null, 
+      currentGroup: null,    
+      availableGroups: [],
       context: NavigationContext.LOADING,
       error: null
     };
     this.listeners = [];
   }
+
+  getCurrentGroup() { return this.state.currentGroup; }
+
+  getAvailableGroups() { return this.state.availableGroups; }
+
 
   getUser() {
     return this.state.user; 
@@ -55,6 +62,15 @@ export class App {
     }
     this.notify();
   }
+  setCurrentGroup(group) {
+        this.state = { ...this.state, currentGroup: group };
+        this.notify();
+    }
+
+    setAvailableGroups(groups) {
+        this.state = { ...this.state, availableGroups: groups };
+        this.notify();
+    }
 
   setError(error) {
   if (this.state.error === error) return; 
