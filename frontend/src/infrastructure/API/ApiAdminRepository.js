@@ -29,9 +29,11 @@ async addNewEntityType(name) {
   });
 }
  async addNewEntityAttribute(entityId, attributeName){
-   return await this.request(`/api/admin/permissions/create/${entityId}/attribute`, {
+   return await this.request(`/api/admin/permissions/attribute/create`, {
     method: "POST",
-    body: JSON.stringify({ name: attributeName })
+    body: JSON.stringify({ name: attributeName,
+       entityType: entityId
+     })
    })
  }
 
