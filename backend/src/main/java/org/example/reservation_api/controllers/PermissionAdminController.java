@@ -21,7 +21,7 @@ import java.util.UUID;
 @RequestMapping("/api/admin/permissions")
 @RequiredArgsConstructor
 @Slf4j
-@PreAuthorize("@myCustomBouncer.hasSystemPermission('MANAGE_SYSTEM_PERMISSIONS')")
+@PreAuthorize("@myCustomBouncer.hasSystemPermissions()")
 public class PermissionAdminController {
 
     private final PermissionAdminService adminService;
@@ -34,19 +34,23 @@ public class PermissionAdminController {
         return ResponseEntity.ok(Map.of("message", "Permission attribute rule updated successfully"));
     }
     @PostMapping("/entity/create")
+    @PreAuthorize("@myCustomBouncer.hasSpecificSystemPermission('MANAGE_SYSTEM_PERMISSIONS')")
     public ResponseEntity<SimpleCreateResponse> createEntity( @Valid @RequestBody CreateEntityRequest request){
                 String name = request.name();
 
                 return ResponseEntity.ok(adminService.createEntity(name));
     }
 
+
     @PostMapping("/attribute/create")
+    @PreAuthorize("@myCustomBouncer.hasSpecificSystemPermission('MANAGE_SYSTEM_PERMISSIONS')")
     public ResponseEntity<SimpleCreateResponse> createAttribute( @Valid @RequestBody CreateAttributeForEntityRequest request){
         String name = request.name();
         return ResponseEntity.ok(new SimpleCreateResponse(adminService.createNewTargetableAttribute(request.entityType(), name)));
     }
 
     @GetMapping("/view/entities/all")
+    @PreAuthorize("@myCustomBouncer.hasSpecificSystemPermission('MANAGE_SYSTEM_PERMISSIONS')")
     public ResponseEntity<List<EntityType>> listAllEntities(
             @AuthenticationPrincipal UUID currentUserId
     ) {
@@ -54,12 +58,13 @@ public class PermissionAdminController {
         return ResponseEntity.ok(adminService.getAllEntities());
     }
     @GetMapping("/view/entities/{entityId}/attributes")
+    @PreAuthorize("@myCustomBouncer.hasSpecificSystemPermission('MANAGE_SYSTEM_PERMISSIONS')")
     public ResponseEntity<List<EntityAttribute>> getAttributesByEntity(@PathVariable UUID entityId) {
         List<EntityAttribute> attributes = adminService.getAttributesOfEntity(entityId);
         return ResponseEntity.ok(attributes);
     }
     @PostMapping("/attribute/appendTo/nestedGroup")
-    @PreAuthorize("@myCustomBouncer.hasSystemPermission('CAN_GRANT_ATTRIBUTES')")
+    @PreAuthorize("@myCustomBouncer.hasSpecificSystemPermission('CAN_GRANT_ATTRIBUTES')")
     public ResponseEntity<String> append(@Valid @RequestBody AppendAttributeToNestedGroupRequest request){
         return ResponseEntity.ok("Success, " + adminService.grantAttributesToNestedGroup(request) + " attributes have been updated");
     }

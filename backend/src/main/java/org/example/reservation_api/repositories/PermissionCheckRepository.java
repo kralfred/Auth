@@ -65,6 +65,8 @@ public class PermissionCheckRepository {
                 .list();
     }
 
+
+
     public boolean hasSystemPermissions(UUID userId, UUID systemGroupId){
         String sql = """
             SELECT EXISTS (

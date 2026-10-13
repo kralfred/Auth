@@ -63,11 +63,13 @@ public class MyCustomBouncer {
        return false;
     }
 
-    public boolean hasSystemPermission(String permission) {
+    @Transactional
+    public boolean hasSpecificSystemPermission(String permission) {
         UUID userId = SecurityUtils.getCurrentUserId();
         if (userId == null) return false;
         return permissionCheckRepository.hasSystemPermission(userId, permission);
     }
+
 
     @Transactional
     public TokenValidationResult checkToken(String token){
